@@ -1,0 +1,1230 @@
+@import "tailwindcss";
+
+/* ==================================================================
+   DETERA — sistema de design
+
+   Conceito: a trilha. Uma linha percorre a página inteira, marcada por
+   losangos a cada seção — a mesma personalidade atravessando presença,
+   crescimento, tecnologia e infraestrutura como faces de uma coisa só,
+   em vez de seções empilhadas sem relação entre si. Quem conhece jogos
+   lê pontos de continuação; quem não conhece lê um filete editorial.
+
+   Cor: dois acentos com significado fixo, nunca decorativos.
+   Vermelho (determinação) = ação, estado ativo, o núcleo.
+   Azul (sistema) = infraestrutura, dado, o que sustenta.
+
+   Tipografia: uma família só, Oxanium, do leve ao pesado. Cantos
+   chanfrados a 45° e proporção larga — a mesma personalidade do nome
+   desenhado (`Letreiro`), que não usa fonte nenhuma. Pesada nos títulos,
+   leve e espaçada no slogan e nos rótulos de estado, regular no corpo.
+   ================================================================== */
+@theme {
+  /* Superfícies — preto com desvio de azul, nunca preto neutro */
+  --color-vazio: #07080b;
+  --color-camada: #0e1015;
+  --color-camada-alta: #161920;
+  --color-borda: #23262e;
+  --color-borda-viva: #363b45;
+  /* Limite de componente interativo. Mais claro que as bordas decorativas
+     de propósito: campo e botão precisam de 3:1 contra o fundo (WCAG
+     1.4.11), e o filete que separa um bloco do outro não. */
+  --color-contorno: #5c626d;
+
+  /* Texto */
+  --color-texto: #f2f3f5;
+  --color-texto-suave: #9ba1ac;
+  --color-texto-fraco: #767c88;
+
+  /* Determinação — ação, estado ativo, núcleo */
+  --color-determinacao: #ff3b3b;
+  --color-determinacao-viva: #ff6b6b;
+  --color-determinacao-funda: #3d0f14;
+
+  /* Sistema — infraestrutura, continuidade, dado */
+  --color-sistema: #4c7dff;
+  --color-sistema-viva: #7ca0ff;
+  --color-sistema-funda: #10203f;
+
+  /* Tipografia — uma família só, papéis diferentes por peso e espacejamento.
+     Auto-hospedada logo abaixo (`@font-face`), não via next/font: o
+     carregador do Turbopack não resolve os arquivos da Oxanium neste
+     ambiente, e servir o woff2 do próprio `public/` também satisfaz o
+     `font-src 'self'` da CSP. */
+  --font-display: "Oxanium", system-ui, -apple-system, sans-serif;
+  --font-sans: "Oxanium", system-ui, -apple-system, sans-serif;
+  --font-mono: "Oxanium", ui-monospace, monospace;
+
+  /*
+    Escala — salto largo no display, razão ~1.25 no corpo.
+
+    Os três degraus de título não são tamanhos à escolha de quem escreve a
+    seção: são três volumes de voz, e cada seção recebe o seu pelo peso do
+    que ela diz.
+
+      `display`     o que a empresa é e o que ela vende — a oferta e o
+                    manifesto. Duas seções na página inteira, não mais.
+      `subdisplay`  o argumento: prova, problema, tese, fechamento.
+      `title`       utilidade — processo e dúvidas. Seção que explica
+                    mecânica não precisa do mesmo volume de quem defende
+                    uma ideia.
+
+    Antes disso, oito dos nove títulos da página saíam no mesmo tamanho, e
+    o FAQ gritava tão alto quanto o manifesto.
+  */
+  --text-marca: clamp(3.25rem, 1rem + 9vw, 8rem);
+  --text-marca--line-height: 0.86;
+  --text-marca--letter-spacing: -0.045em;
+
+  --text-display: clamp(2.1rem, 1.2rem + 3.6vw, 3.75rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.03em;
+
+  --text-subdisplay: clamp(1.8rem, 1.15rem + 2.5vw, 3rem);
+  --text-subdisplay--line-height: 1.04;
+  --text-subdisplay--letter-spacing: -0.025em;
+
+  --text-title: clamp(1.5rem, 1.15rem + 1.4vw, 2.25rem);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.02em;
+
+  --text-heading: clamp(1.1rem, 1rem + 0.45vw, 1.35rem);
+  --text-heading--line-height: 1.25;
+  --text-heading--letter-spacing: -0.01em;
+
+  --text-lead: clamp(1.05rem, 1rem + 0.4vw, 1.25rem);
+  --text-lead--line-height: 1.65;
+
+  --text-micro: 0.78rem;
+  --text-micro--line-height: 1.5;
+  --text-micro--letter-spacing: 0.08em;
+
+  /* Forma — raio curto: interface técnica, não cartão de SaaS */
+  --radius-min: 2px;
+  --radius-bloco: 4px;
+
+  --ease-decidido: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ------------------------------------------------------------------
+   Oxanium — auto-hospedada.
+
+   É uma fonte variável: um arquivo por subconjunto cobre o eixo de peso
+   inteiro (200–800), então bastam dois woff2 em vez de um por peso. Os
+   arquivos vêm do próprio `public/fonts` — nada carrega de CDN, e a CSP
+   (`font-src 'self'`) continua fechada.
+
+   `latin` cobre o português (acentos ficam no bloco U+0000–00FF);
+   `latin-ext` entra por completude, e é pequeno.
+   ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Oxanium";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/oxanium-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Oxanium";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/oxanium-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    /* Sem `scroll-behavior: smooth`: quem suaviza a rolagem agora é o Lenis
+       (`smooth-scroll.tsx`), e com os dois ligados cada âncora era animada
+       duas vezes, uma brigando com a outra. Com movimento reduzido não há
+       Lenis, e o salto direto é o que a pessoa pediu.
+
+       Altura exata do cabeçalho fixo — vale para o salto nativo. */
+    scroll-padding-top: 4.5rem;
+  }
+
+  body {
+    background-color: var(--color-vazio);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grão. Sobre preto chapado a tela fica morta; o ruído devolve
+     matéria sem virar textura visível. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23r)'/%3E%3C/svg%3E");
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-determinacao);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  /* Seção que recebe o foco por âncora (`tabindex="-1"`, posto pelo
+     `SmoothScroll`): o foco vai para lá só para o próximo Tab continuar
+     dali, e um contorno vermelho em volta da seção inteira seria ruído. */
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--color-determinacao);
+    color: var(--color-vazio);
+  }
+}
+
+@layer components {
+  /* ----------------------------------------------------------------
+     Pular para o conteúdo.
+
+     Classe própria, e não `sr-only focus:not-sr-only`: as duas
+     utilities caem na mesma especificidade e a ordem de emissão
+     decide quem vence — frágil demais para o único atalho de teclado
+     da página.
+     ---------------------------------------------------------------- */
+  .pular-conteudo {
+    position: absolute;
+    top: 0;
+    left: -9999px;
+    z-index: 100;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-determinacao);
+    color: var(--color-vazio);
+    font-weight: 600;
+  }
+
+  .pular-conteudo:focus {
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+
+  /* ----------------------------------------------------------------
+     A trilha — o filete contínuo que atravessa a página.
+
+     Uma por seção, e como as seções se encostam, os filetes emendam
+     em uma linha só. Aparece a partir de 1280px, onde existe margem
+     sobrando: no mobile viraria sujeira ao lado do texto.
+     ---------------------------------------------------------------- */
+  .trilha {
+    display: none;
+  }
+
+  @media (min-width: 80rem) {
+    .trilha {
+      display: block;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(max(0px, (100% - 76rem) / 2) + 1.15rem);
+      width: 1px;
+      background: linear-gradient(
+        to bottom,
+        var(--color-borda) 0,
+        var(--color-borda) calc(100% - 6rem),
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+
+    /* Ponto de continuação: o losango pousado sobre a linha. */
+    .trilha::before {
+      content: "";
+      position: absolute;
+      top: 5.25rem;
+      left: 50%;
+      width: 7px;
+      height: 7px;
+      transform: translateX(-50%) rotate(45deg);
+      background: var(--color-vazio);
+      border: 1px solid var(--color-borda-viva);
+    }
+
+    /* No fim da página a linha desaparece por fade em vez de bater
+       num terminal — o mesmo cuidado do resto do sistema, até no detalhe
+       que quase ninguém vai notar conscientemente. */
+    .trilha--fim {
+      background: linear-gradient(
+        to bottom,
+        var(--color-borda) 0,
+        transparent 92%
+      );
+    }
+
+    .trilha--fim::before {
+      display: none;
+    }
+  }
+
+  /* ----------------------------------------------------------------
+     Botões — três variantes, estados explícitos.
+     ---------------------------------------------------------------- */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border-radius: var(--radius-min);
+    border: 1px solid transparent;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    transition:
+      background-color 0.18s var(--ease-decidido),
+      border-color 0.18s var(--ease-decidido),
+      color 0.18s var(--ease-decidido),
+      transform 0.18s var(--ease-decidido);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn--determinacao {
+    background: var(--color-determinacao);
+    color: var(--color-vazio);
+  }
+
+  .btn--determinacao:hover {
+    background: var(--color-determinacao-viva);
+  }
+
+  .btn--contorno {
+    border-color: var(--color-contorno);
+    color: var(--color-texto);
+  }
+
+  .btn--contorno:hover {
+    border-color: var(--color-sistema);
+    color: var(--color-sistema-viva);
+  }
+
+  .btn--fantasma {
+    color: var(--color-texto-suave);
+  }
+
+  .btn--fantasma:hover {
+    color: var(--color-texto);
+  }
+
+  /* ----------------------------------------------------------------
+     Bloco: a caixa base do sistema. Borda em vez de sombra — sobre
+     preto, sombra não existe.
+     ---------------------------------------------------------------- */
+  .bloco {
+    border: 1px solid var(--color-borda);
+    border-radius: var(--radius-bloco);
+    background: var(--color-camada);
+  }
+
+  .bloco--vivo {
+    transition:
+      border-color 0.2s var(--ease-decidido),
+      background-color 0.2s var(--ease-decidido);
+  }
+
+  .bloco--vivo:hover {
+    border-color: var(--color-borda-viva);
+    background: var(--color-camada-alta);
+  }
+
+  /* Etiqueta de estado. Mesma família do resto, só com mais espacejamento
+     e caixa alta — e os dígitos alinhados por `tabular-nums` para o placar
+     do joguinho não tremer quando muda de 9 para 10. */
+  .estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-texto-fraco);
+  }
+
+  /* Campos de formulário */
+  .campo {
+    width: 100%;
+    border: 1px solid var(--color-contorno);
+    border-radius: var(--radius-min);
+    background: var(--color-camada-alta);
+    color: var(--color-texto);
+    padding: 0.75rem 0.9rem;
+    transition:
+      border-color 0.18s var(--ease-decidido),
+      background-color 0.18s var(--ease-decidido);
+  }
+
+  .campo::placeholder {
+    color: var(--color-texto-fraco);
+  }
+
+  .campo:hover {
+    border-color: var(--color-texto-suave);
+  }
+
+  .campo:focus {
+    border-color: var(--color-determinacao);
+    outline: none;
+  }
+
+  .campo[aria-invalid="true"] {
+    border-color: var(--color-determinacao);
+  }
+
+  /* ----------------------------------------------------------------
+     Aura — o degradê amplo e borrado que dá vida ao fundo das seções
+     escuras. É o brilho do núcleo da marca em escala grande.
+
+     Parada. Antes deslizava em loop (`aura-deriva`), e um borrão de
+     40rem balançando sozinho disputava o olho com os trechos fixados da
+     rolagem. A do hero é conduzida pela rolagem (`HeroCena`), que por
+     isso é dona do `transform` e da `opacity` dela: posicione sempre com
+     `top`/`left`/`right`/`bottom`, nunca com utilities de `transform`.
+     ---------------------------------------------------------------- */
+  .aura {
+    position: absolute;
+    border-radius: 9999px;
+    pointer-events: none;
+    filter: blur(90px);
+    background: radial-gradient(
+      circle,
+      var(--aura-cor, var(--color-determinacao)) 0%,
+      transparent 70%
+    );
+    opacity: var(--aura-opacidade, 0.16);
+  }
+
+  /* ----------------------------------------------------------------
+     Botão-núcleo — o reflexo que acompanha o cursor no CTA principal.
+     Só ganham esse tratamento os dois ou três botões mais importantes
+     da página; espalhá-lo por todo botão banalizaria o gesto.
+     ---------------------------------------------------------------- */
+  .btn-nucleo {
+    --mx: 50%;
+    --my: 50%;
+    overflow: hidden;
+  }
+
+  .btn-nucleo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      110px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, 0.32),
+      transparent 65%
+    );
+    opacity: 0;
+    transition: opacity 0.25s var(--ease-decidido);
+    pointer-events: none;
+  }
+
+  .btn-nucleo:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Estrela: pisca em looping, no ritmo que a instância recebeu por variável
+   CSS. A opacidade nunca chega a zero — uma estrela apagada de vez pareceria
+   defeito de tela, não brilho fraco. */
+@keyframes estrela-piscar {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.estrela {
+  animation: estrela-piscar var(--estrela-duracao, 3.6s) ease-in-out infinite;
+  animation-delay: var(--estrela-atraso, 0s);
+}
+
+/* No celular a tela é menor e o aparelho quase sempre é mais fraco. O céu
+   ficou bem mais denso do que era, então aqui sobra um terço das estrelas:
+   na largura de um telefone a área visível continua parecendo cheia, e o
+   número de elementos animados ao mesmo tempo cai para um terço. */
+@media (max-width: 640px) {
+  .estrela:nth-child(2n),
+  .estrela:nth-child(3n) {
+    display: none;
+  }
+}
+
+/* Cadente: aparece, atravessa e some. O ciclo é longo de propósito — se
+   passasse toda hora viraria protetor de tela.
+
+   A posição fica parada durante quase todo o ciclo e só percorre o trecho
+   final: sem isso o risco já teria atravessado metade da tela antes de
+   acender, e apareceria sempre no mesmo canto.
+
+   O deslocamento e o ângulo chegam por variável, calculados juntos no
+   componente com `atan2` — é o que garante que cada risco aponte para onde
+   ele de fato anda. */
+@keyframes cadente-passa {
+  0%,
+  93% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(var(--risco-angulo, 28deg)) scaleX(0);
+  }
+  94.5% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(var(--risco-angulo, 28deg)) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--risco-dx, 120px), var(--risco-dy, 64px), 0)
+      rotate(var(--risco-angulo, 28deg)) scaleX(1);
+  }
+}
+
+.cadente {
+  height: 1px;
+  transform-origin: left center;
+  background: linear-gradient(to right, transparent, var(--color-texto));
+  animation: cadente-passa var(--risco-duracao, 5.5s) linear infinite;
+  animation-delay: var(--risco-atraso, 0s);
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------
+   Cometa: o irmão grande da cadente. Cauda longa em degradê, cabeça
+   acesa com halo, e um ciclo de mais de um minuto — passa raro o
+   bastante para ser evento, não enfeite de fundo.
+
+   O elemento em si é um ponto sem dimensão: a cabeça e a cauda são os
+   dois pseudo-elementos, ancorados nele. Assim a viagem (`transform`
+   no pai) não briga com a orientação da cauda (`rotate` no filho).
+   ------------------------------------------------------------------ */
+/* A travessia ocupa quase metade do ciclo, e não um sétimo dele.
+
+   Com o ciclo inteiro em 6,2 segundos, manter a janela antiga faria o
+   cometa cruzar em menos de um segundo — indistinguível de uma cadente.
+   Abrindo a janela, ele atravessa em torno de 2,8s: bem mais rápido do
+   que era, e ainda visivelmente mais lento e mais graúdo que os riscos
+   curtos, que é o que separa as duas coisas. */
+@keyframes cometa-passa {
+  0%,
+  55% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  62% {
+    opacity: 0.9;
+  }
+  93% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--risco-dx, 420px), var(--risco-dy, 190px), 0);
+  }
+}
+
+.cometa {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  animation: cometa-passa var(--risco-duracao, 6.2s) cubic-bezier(0.3, 0, 0.7, 1) infinite;
+  animation-delay: var(--risco-atraso, 0s);
+}
+
+/* A cauda sai de trás da cabeça: a barra termina na origem e é girada
+   em torno da própria ponta direita, então ela aponta para o lado
+   contrário ao da viagem, sozinha, sem número escrito na mão. */
+.cometa::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: calc(1.5px * var(--cometa-escala, 1));
+  width: var(--cometa-cauda, 220px);
+  transform-origin: 100% 50%;
+  transform: rotate(var(--risco-angulo, 20deg));
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--cometa-cor, var(--color-texto)) 55%, transparent)
+  );
+  border-radius: 9999px;
+}
+
+.cometa::after {
+  content: "";
+  position: absolute;
+  top: calc(-2px * var(--cometa-escala, 1));
+  right: calc(-2px * var(--cometa-escala, 1));
+  width: calc(4px * var(--cometa-escala, 1));
+  height: calc(4px * var(--cometa-escala, 1));
+  border-radius: 9999px;
+  background: var(--cometa-cor, var(--color-texto));
+  box-shadow: 0 0 calc(9px * var(--cometa-escala, 1))
+    color-mix(in srgb, var(--cometa-cor, var(--color-texto)) 70%, transparent);
+}
+
+/* ------------------------------------------------------------------
+   A marca em movimento. As duas metades respiram, o núcleo pulsa e os
+   traços piscam em sequência, como carga subindo pela linha.
+   ------------------------------------------------------------------ */
+@keyframes marca-respira-esq {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-0.45px);
+  }
+}
+
+@keyframes marca-respira-dir {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(0.45px);
+  }
+}
+
+@keyframes marca-nucleo-pulsa {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(0.88);
+  }
+}
+
+@keyframes marca-traco-pisca {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.marca-energia {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--color-determinacao) 70%, transparent));
+}
+
+.marca-viva .marca-placa--esq {
+  animation: marca-respira-esq 4.5s ease-in-out infinite;
+}
+
+.marca-viva .marca-placa--dir {
+  animation: marca-respira-dir 4.5s ease-in-out infinite;
+}
+
+.marca-viva .marca-nucleo {
+  transform-origin: 16px 20px;
+  animation: marca-nucleo-pulsa 2.8s ease-in-out infinite;
+}
+
+.marca-viva .marca-traco {
+  animation: marca-traco-pisca 2.8s ease-in-out infinite;
+}
+
+/* Os quatro traços piscam em ordem, de fora para dentro: a energia parece
+   percorrer a linha em vez de acender tudo de uma vez. */
+.marca-viva .marca-traco:nth-of-type(1) {
+  animation-delay: 0s;
+}
+.marca-viva .marca-traco:nth-of-type(2) {
+  animation-delay: 0.35s;
+}
+.marca-viva .marca-traco:nth-of-type(4) {
+  animation-delay: 0.35s;
+}
+.marca-viva .marca-traco:nth-of-type(5) {
+  animation-delay: 0s;
+}
+
+/* No hover da marca no cabeçalho, tudo acelera e acende. */
+.group:hover .marca-viva .marca-nucleo {
+  animation-duration: 0.9s;
+}
+
+.group:hover .marca-energia {
+  filter: drop-shadow(0 0 5px var(--color-determinacao));
+}
+
+/* ------------------------------------------------------------------
+   Prévia dos projetos
+   ------------------------------------------------------------------ */
+
+/* Slideshow em fade. Cada foto recebe o mesmo ciclo com atraso escalonado,
+   então a troca acontece sem estado, sem timer e sem re-render. */
+@keyframes previa-troca {
+  0%,
+  3% {
+    opacity: 0;
+  }
+  7%,
+  22% {
+    opacity: 1;
+  }
+  26%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Só as fotos a partir da segunda animam: a primeira fica por baixo, sempre
+   visível. Assim, se a animação não rodar — movimento reduzido, impressão,
+   navegador antigo — a prévia mostra uma foto em vez de um quadro vazio. */
+.previa-slide {
+  opacity: 0;
+  animation: previa-troca var(--previa-duracao, 6.9s) ease-in-out infinite;
+}
+
+/* A barra da obra enche e recomeça. É a piada: obra nunca termina. */
+@keyframes obra-barra {
+  0% {
+    transform: scaleX(0.04);
+  }
+  70% {
+    transform: scaleX(0.86);
+  }
+  86% {
+    transform: scaleX(0.92);
+  }
+  100% {
+    transform: scaleX(0.04);
+  }
+}
+
+.obra-barra {
+  /* Estado base parado em 70%: se a animação não rodar (movimento reduzido),
+     a barra ainda lê como obra em andamento, não como obra concluída. */
+  transform: scaleX(0.7);
+  animation: obra-barra 6.4s ease-in-out infinite;
+}
+
+@keyframes obra-pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.obra-pulso {
+  animation: obra-pulso 1.8s ease-in-out infinite;
+}
+
+/* Os recados se revezam no mesmo lugar. */
+@keyframes obra-recado {
+  0%,
+  4% {
+    opacity: 0;
+  }
+  9%,
+  28% {
+    opacity: 1;
+  }
+  33%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.obra-recado {
+  opacity: 0;
+  animation: obra-recado 6.9s ease-in-out infinite;
+}
+
+/* ==================================================================
+   Movimento
+   ================================================================== */
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* O núcleo respira. Um elemento vivo na página inteira — persistência
+   mostrada, não escrita. */
+@keyframes nucleo {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ------------------------------------------------------------------
+   A entrada do nome/slogan: cada letra cai como um meteoro.
+
+   Vem de cima e um pouco da direita, esticada na vertical e desfocada
+   — é assim que se desenha velocidade em algo que não tem rastro
+   próprio. Perto do chão ela achata, volta e assenta: sem esse
+   contragolpe a letra pousaria como um `fade-in` qualquer.
+
+   `meteoro-cai` é a versão texto (o slogan, ainda em `TextoMeteoro`);
+   `letra-meteoro` logo abaixo é a mesma coreografia para os `<path>` do
+   nome desenhado, com transformações em % (que acompanham o tamanho do
+   SVG) e a brasa vermelha como `drop-shadow`.
+   ------------------------------------------------------------------ */
+@keyframes meteoro-cai {
+  0% {
+    opacity: 0;
+    transform: translate3d(0.42em, -1.9em, 0) scale(0.78, 2.3);
+    filter: blur(5px);
+    text-shadow:
+      0 -0.55em 1.4em var(--color-determinacao),
+      0 0 0.5em var(--color-determinacao);
+  }
+  38% {
+    opacity: 1;
+  }
+  68% {
+    transform: translate3d(0, 0.07em, 0) scale(1.08, 0.86);
+    filter: blur(0);
+    text-shadow: 0 0 0.42em color-mix(in srgb, var(--color-determinacao) 60%, transparent);
+  }
+  84% {
+    transform: translate3d(0, -0.035em, 0) scale(0.98, 1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+    text-shadow: none;
+  }
+}
+
+/* A mesma queda, agora para os `<path>` do nome desenhado. As
+   transformações são em % — com `transform-box: fill-box` elas se medem
+   pela própria caixa de cada letra, então acompanham o SVG em qualquer
+   tamanho. A brasa vermelha vira `drop-shadow` (SVG não tem `text-shadow`). */
+@keyframes letra-meteoro {
+  0% {
+    opacity: 0;
+    transform: translate(34%, -180%) scale(0.8, 2.3);
+    filter: blur(3px) drop-shadow(0 -14px 22px var(--color-determinacao));
+  }
+  38% {
+    opacity: 1;
+  }
+  68% {
+    transform: translate(0, 6%) scale(1.08, 0.86);
+    filter: blur(0)
+      drop-shadow(0 0 8px color-mix(in srgb, var(--color-determinacao) 60%, transparent));
+  }
+  84% {
+    transform: translate(0, -3%) scale(0.98, 1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* A luz que atravessa o nome depois que ele pousa: uma faixa vermelha
+   recortada nas próprias letras (`clipPath`), deslizando da esquerda
+   para a direita. Volta a cada 5,5s e a travessia dura ~2,2s — passa
+   bastante sem virar presença constante sobre o nome. O atraso negativo
+   põe a primeira passagem logo depois de a última letra pousar (~1,15s),
+   não daqui a alguns segundos. */
+/* A faixa é um `<rect>` de 280 unidades que começa fora da vista à
+   esquerda (`x = -280`) e desliza para a direita. `transform-box:
+   fill-box` faz o `translateX` em % se medir pela largura da própria
+   faixa, então a travessia acompanha o SVG em qualquer tamanho. Se o
+   navegador não animar, a faixa fica parada fora da vista: sem luz, sem
+   defeito. */
+@keyframes varredura-detera {
+  0%,
+  58% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  66%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(360%);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .meteoro {
+    display: inline-block;
+    animation: meteoro-cai 0.66s cubic-bezier(0.22, 0.72, 0.3, 1) both;
+  }
+
+  .letra-meteoro {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: letra-meteoro 0.66s cubic-bezier(0.22, 0.72, 0.3, 1) both;
+  }
+
+  /* O relevo do nome desenhado: uma sombra funda que assenta no fundo e um
+     halo claro por cima, o mesmo par que faz o render do Samuel flutuar —
+     só que aqui em cima de preto, então a sombra some no escuro e é o halo
+     que carrega a profundidade. Vai no SVG inteiro; a brasa vermelha da
+     queda mora nas letras, por dentro deste, e um não apaga o outro. */
+  .letreiro-relevo {
+    filter: drop-shadow(0 6px 12px rgba(2, 3, 5, 0.75))
+      drop-shadow(0 1px 2px rgba(2, 3, 5, 0.5))
+      drop-shadow(0 0 22px rgba(242, 243, 245, 0.11));
+  }
+
+  .marca-varredura rect {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: varredura-detera 5.5s cubic-bezier(0.45, 0, 0.25, 1) -2.15s infinite;
+  }
+
+  .entrar {
+    animation: entrar 0.6s var(--ease-decidido) both;
+  }
+
+  .nucleo-vivo {
+    animation: nucleo 3.4s ease-in-out infinite;
+  }
+}
+
+/*
+  Revelação por scroll sem uma linha de JavaScript: a animação é
+  conduzida pela posição do elemento na tela, não por observador.
+
+  Fora do `@supports`, nada é aplicado — navegador sem suporte mostra
+  o conteúdo normalmente, que é o comportamento certo quando a
+  alternativa seria esconder texto esperando um script.
+*/
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-surgir] {
+      animation: surgir linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+
+    /*
+      O caminho de volta se desenha de baixo para cima conforme a pessoa
+      rola — o sentido da própria volta, de `05` para `01`. Revelar pelo
+      `clip-path` em vez de crescer a altura evita reflow: o elemento
+      ocupa o espaço final desde o começo e só a máscara se move.
+    */
+    .ciclo-volta {
+      animation: desenhar-volta linear both;
+      animation-timeline: view();
+      animation-range: entry 55% cover 42%;
+    }
+  }
+}
+
+/*
+  O retorno do ciclo: um "⊂" desenhado com três bordas e cantos
+  arredondados à esquerda. Um elemento só, sem SVG — assim ele acompanha
+  qualquer altura que a lista tenha sem viewBox para recalcular nem curva
+  esticada quando a caixa fica alta e estreita.
+*/
+.ciclo-volta {
+  border-top: 1px solid var(--color-borda-viva);
+  border-bottom: 1px solid var(--color-borda-viva);
+  border-left: 1px solid var(--color-borda-viva);
+  border-right: 0;
+  border-radius: 0.85rem 0 0 0.85rem;
+  /* O estado final também é o estado de quem não tem a animação: sem
+     suporte a view(), ou com movimento reduzido, a volta aparece inteira. */
+  clip-path: inset(0 0 0 0);
+}
+
+@keyframes desenhar-volta {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* ==================================================================
+   Manifesto em palco — o momento marcante (`ManifestoCena`).
+
+   O HTML da seção é a lista de sempre, e é ela que aparece sem JavaScript,
+   com movimento reduzido e no papel. A classe `manifesto--palco` só entra
+   quando a coreografia vai rodar, e aí a seção vira uma tela fixa: título
+   e progresso à esquerda, e os quatro pares empilhados na mesma célula da
+   grade à direita, um sobre o outro — é o GSAP que decide qual aparece.
+
+   Empilhados pela grade (`grid-area: 1 / 1`), não por `position:
+   absolute`: a célula fica com a altura do par mais alto, e o palco se
+   centraliza sozinho em qualquer largura, sem medir nada em JavaScript.
+
+   Tudo dentro de `@media screen`: impresso, o palco empilhado viraria
+   quatro frases escritas uma por cima da outra.
+   ================================================================== */
+.manifesto__progresso,
+.manifesto__no,
+.manifesto__fecho-marca {
+  display: none;
+}
+
+@media screen {
+  .manifesto--palco {
+    display: flex;
+    align-items: center;
+    height: 100svh;
+    /* O cabeçalho fixo cobre o topo; o palco se centraliza no que sobra. */
+    padding-top: 4.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .manifesto--palco .manifesto__grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 2rem;
+  }
+
+  @media (min-width: 48rem) {
+    .manifesto--palco .manifesto__grade {
+      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+      align-items: center;
+      gap: 4rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .manifesto--palco .manifesto__grade {
+      gap: 6rem;
+    }
+  }
+
+  /* No celular o título sobe e a frase de apoio sai: o que tem que caber
+     na tela é o par, e o título sozinho já diz do que se trata. */
+  @media (max-width: 47.99rem) {
+    .manifesto--palco .manifesto__lead {
+      display: none;
+    }
+  }
+
+  .manifesto--palco .manifesto__progresso {
+    display: flex;
+    gap: 0.9rem;
+    margin-top: 1.75rem;
+    padding-left: 2px;
+  }
+
+  .manifesto--palco .manifesto__palco {
+    display: grid;
+  }
+
+  .manifesto--palco .manifesto__pares,
+  .manifesto--palco .manifesto__fecho {
+    grid-area: 1 / 1;
+    align-self: center;
+    margin: 0;
+  }
+
+  .manifesto--palco .manifesto__pares {
+    display: grid;
+  }
+
+  .manifesto--palco .manifesto__par {
+    grid-area: 1 / 1;
+    align-self: center;
+    display: block;
+    border: 0;
+    padding: 0;
+  }
+
+  .manifesto--palco .manifesto__no-lista {
+    display: none;
+  }
+
+  /* A ideia genérica, no tamanho de uma manchete. Recua até virar rótulo
+     (escala 0,56, pelo canto de baixo à esquerda) quando a específica se
+     resolve embaixo dela. */
+  .manifesto--palco .manifesto__generico {
+    max-width: 16ch;
+    font-size: clamp(2.2rem, 1rem + 4.2vw, 4.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--color-texto-suave);
+    text-wrap: balance;
+  }
+
+  .manifesto--palco .manifesto__especifico-caixa {
+    --corpo: clamp(1.08rem, 0.95rem + 0.55vw, 1.42rem);
+    margin-top: 1.5rem;
+    padding-left: 1.6rem;
+  }
+
+  .manifesto--palco .manifesto__especifico {
+    max-width: 44ch;
+    font-size: var(--corpo);
+    line-height: 1.65;
+    color: var(--color-texto);
+  }
+
+  /* O nó vermelho, na altura do meio da primeira linha da frase. */
+  .manifesto--palco .manifesto__no {
+    display: block;
+    position: absolute;
+    left: 0.15rem;
+    top: calc(var(--corpo) * 0.825 - 3.5px);
+  }
+
+  .manifesto--palco .manifesto__fecho-marca {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+  }
+
+  .manifesto--palco .manifesto__fecho p {
+    max-width: 24ch;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-texto);
+    text-wrap: balance;
+  }
+}
+
+/*
+  Na impressão não existe rolagem, então a view timeline nunca progride e o
+  conteúdo sairia com opacidade zero — página em branco. O reset abaixo é o
+  que garante que ninguém imprima um documento vazio.
+*/
+@media print {
+  [data-surgir],
+  .entrar,
+  .meteoro,
+  .letra-meteoro,
+  .ciclo-volta,
+  /* O que a coreografia da rolagem deixou com estilo em linha no momento
+     da impressão: letras já desfeitas, pares fora do palco, fotos ainda
+     recortadas. No papel, tudo no estado final. */
+  [data-letra-desfaz],
+  [data-hero-resto],
+  [data-par],
+  [data-generico],
+  [data-palavra],
+  [data-fecho],
+  [data-revelar],
+  [data-revelar-midia],
+  [data-desenhar] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Sem rolagem a máscara do retorno ficaria no quadro inicial, que é
+     invisível — no papel ele sai inteiro. */
+  .ciclo-volta,
+  [data-revelar] {
+    clip-path: none !important;
+  }
+
+  [data-par],
+  [data-fecho] {
+    visibility: visible !important;
+  }
+
+  /* A faixa de luz do nome não tem função no papel. */
+  .marca-varredura {
+    display: none !important;
+  }
+
+  /* Degradê e céu decorativos não têm função no papel — somem junto com o
+     resto dos enfeites que a impressão já limpa. */
+  .aura,
+  .estrela,
+  .cadente,
+  .cometa {
+    display: none !important;
+  }
+
+  /* No slideshow impresso sobra a primeira foto: as outras estão em
+     opacidade zero esperando a vez que nunca chega no papel. */
+  .previa-slide {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+
+  .previa-slide ~ .previa-slide {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

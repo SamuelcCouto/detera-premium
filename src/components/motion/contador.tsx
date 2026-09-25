@@ -30,7 +30,11 @@ export function Contador({ valor }: { valor: number }) {
           onUpdate: () => {
             el.textContent = String(Math.round(estado.v));
           },
-          scrollTrigger: { trigger: el, start: "top 88%", once: true },
+          // Começa no instante em que o número aparece. Com o gatilho mais
+          // para dentro da tela, a nota passava um trecho da rolagem parada
+          // em "0" na borda de baixo — e zero lido de relance numa nota
+          // medida é exatamente o que este site não pode mostrar.
+          scrollTrigger: { trigger: el, start: "top bottom", once: true },
         });
         // Ao desfazer (desmontar ou trocar a preferência), volta ao valor final.
         return () => {

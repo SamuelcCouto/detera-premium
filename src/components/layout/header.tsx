@@ -33,12 +33,16 @@ export function Header() {
     if (!marco) return;
 
     const observador = new IntersectionObserver(
-      ([entrada]) => {
-        setSolido(entrada.isIntersecting || entrada.boundingClientRect.top < 0);
-      },
-      // Encostado na borda de baixo também conta como "cruzando" para o
-      // observador; os 2px tiram esse empate do carregamento no topo.
-      { rootMargin: "0px 0px -2px 0px" },
+      ([entrada]) => setSolido(entrada.isIntersecting),
+      // A área observada vai da borda de baixo da janela até muito acima
+      // dela: o marco conta como "dentro" assim que o fim do hero entra por
+      // baixo, e continua dentro depois de passar do topo. Com a janela
+      // normal, um salto de âncora que atravessasse o marco entre dois
+      // quadros (de fora por baixo para fora por cima) não gerava aviso
+      // nenhum, e o cabeçalho ficava transparente sobre o conteúdo.
+      // Os 2px de baixo tiram o empate de o marco encostar na borda no
+      // carregamento, quando o hero ainda não foi fixado.
+      { rootMargin: "100000px 0px -2px 0px" },
     );
     observador.observe(marco);
     return () => observador.disconnect();

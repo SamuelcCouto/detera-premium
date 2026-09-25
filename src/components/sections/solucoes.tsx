@@ -43,7 +43,7 @@ export function Solucoes() {
                 key={pilar.id}
                 id={pilar.id}
                 data-surgir
-                className="grid gap-8 md:grid-cols-[minmax(0,20rem)_1fr] md:gap-14"
+                className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-14"
               >
                 <div className="md:sticky md:top-28 md:self-start">
                   {/* Sem numeração: o próprio texto da seção diz que as
@@ -89,21 +89,44 @@ export function Solucoes() {
                   </a>
                 </div>
 
-                <dl className="border-borda border-t">
-                  {pilar.entregas.map((entrega) => (
-                    <div
-                      key={entrega.nome}
-                      className="border-borda grid gap-1.5 border-b py-5 sm:grid-cols-[minmax(0,13rem)_1fr] sm:gap-8"
-                    >
-                      <dt className="font-display text-[1.02rem] font-bold">
-                        {entrega.nome}
-                      </dt>
-                      <dd className="text-texto-suave max-w-[52ch] leading-relaxed">
-                        {entrega.texto}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+                {/*
+                  No celular as entregas viram um carrossel de deslizar
+                  (`.deslize`): empilhadas, as quatro frentes davam mais de
+                  seis telas de lista seguida, a parte mais cansativa da
+                  página. Rolagem nativa com encaixe, sem JavaScript, e a
+                  ponta do próximo card aparecendo para dizer que há mais.
+                  A partir de 768px é a lista de sempre, ao lado da coluna
+                  presa.
+                */}
+                {/* `min-w-0`, e as colunas da grade em `minmax(0, …)`: item de
+                    grade não encolhe abaixo do próprio conteúdo por padrão, e
+                    o conteúdo aqui é a faixa inteira de cards. Sem isso a
+                    faixa alargava a página toda no celular — o cabeçalho fixo
+                    perdia o botão para fora da tela e o coração do hero
+                    mirava um "centro" que ficava à direita dela. */}
+                <div className="min-w-0">
+                  <p
+                    aria-hidden="true"
+                    className="text-texto-fraco mb-3 text-[0.8rem] md:hidden"
+                  >
+                    {pilar.entregas.length} entregas · deslize para o lado
+                  </p>
+                  <dl className="deslize border-borda md:border-t">
+                    {pilar.entregas.map((entrega) => (
+                      <div
+                        key={entrega.nome}
+                        className="border-borda max-md:bg-camada-alta grid content-start gap-1.5 border-b py-5 max-md:rounded-[4px] max-md:border max-md:p-5 md:grid-cols-[minmax(0,13rem)_1fr] md:gap-8"
+                      >
+                        <dt className="font-display text-[1.02rem] font-bold">
+                          {entrega.nome}
+                        </dt>
+                        <dd className="text-texto-suave max-w-[52ch] leading-relaxed">
+                          {entrega.texto}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
               </article>
             );
           })}

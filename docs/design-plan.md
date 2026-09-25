@@ -49,7 +49,7 @@ Escala:
 
 São dois trechos fixados, no hero e no manifesto.
 
-No celular, o hero tem que caber em 100svh. A trilha de frentes vira uma grade 2×2 só com os nomes, e as promessas continuam em Soluções.
+No celular (revisto depois do primeiro deploy): o hero também é fixado, com o final do coração, sempre que couber na tela; para caber, o nome ocupa a largura inteira e a trilha de frentes sai do hero (as frentes vêm logo abaixo). As entregas de Soluções e os projetos "em obra" viram carrosséis de deslizar — empilhados, Soluções passava de seis telas de lista.
 
 ## Momento marcante
 **"De genérico a personalidade"**: a seção Personalidade fixada.

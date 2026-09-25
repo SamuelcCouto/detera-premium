@@ -37,42 +37,37 @@ const FIM_DO_NOME = ABERTURA + 5 * PASSO_NOME + QUEDA;
  * É o argumento comercial e a filosofia da marca no mesmo desenho — e resolve
  * a primeira dobra sem depender de ilustração.
  *
- * No celular vira uma grade 2×2 só com os nomes. Com a promessa de cada uma,
- * a lista vertical sozinha passava de meia tela e empurrava o hero para
- * além de 100svh; as promessas continuam inteiras em Soluções.
+ * Só a partir de 768px. No celular o hero é fixado e precisa caber inteiro
+ * em 100svh: a trilha (mesmo reduzida a uma grade 2×2) era o que o empurrava
+ * para fora da tela, e as quatro frentes aparecem logo abaixo, em Soluções.
  */
 function TrilhaDeFrentes() {
   return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 md:grid-cols-4 md:gap-0">
+    <ul className="grid grid-cols-4">
       {pilares.map((pilar, indice) => (
-        <li
-          key={pilar.id}
-          className="border-borda relative border-l py-1 pl-4 md:border-l-0 md:border-t md:py-0 md:pt-5 md:pl-0"
-        >
-          {/* O nó sobre a linha. No celular ele fica na vertical, à esquerda. */}
+        <li key={pilar.id} className="border-borda relative border-t pt-5">
+          {/* O nó sobre a linha. */}
           <span
             aria-hidden="true"
-            className={`bg-vazio absolute top-[0.7rem] -left-[4px] h-[7px] w-[7px] rotate-45 border md:top-0 md:left-0 md:-translate-y-1/2 ${
+            className={`bg-vazio absolute top-0 left-0 h-[7px] w-[7px] -translate-y-1/2 rotate-45 border ${
               pilar.acento === "sistema" ? "border-sistema" : "border-determinacao"
             }`}
           />
           <a
             href={`#${pilar.id}`}
-            className="hover:text-texto text-texto-suave block transition-colors md:pr-6"
+            className="hover:text-texto text-texto-suave block pr-6 transition-colors"
           >
             <span className="text-texto font-display block text-[0.98rem] font-bold">
               {pilar.nome}
             </span>
-            <span className="mt-1 hidden text-[0.85rem] leading-snug md:block">
-              {pilar.promessa}
-            </span>
+            <span className="mt-1 block text-[0.85rem] leading-snug">{pilar.promessa}</span>
           </a>
 
           {/* Depois da quarta frente a linha continua. */}
           {indice === pilares.length - 1 ? (
             <span
               aria-hidden="true"
-              className="from-borda absolute -top-px right-0 hidden h-px w-16 translate-x-full bg-gradient-to-r to-transparent md:block"
+              className="from-borda absolute -top-px right-0 h-px w-16 translate-x-full bg-gradient-to-r to-transparent"
             />
           ) : null}
         </li>
@@ -175,15 +170,16 @@ export function Hero() {
                 meteoro, com o símbolo da marca embaixo do "A".
 
                 Maior que antes: é a única mídia do hero, e o tamanho é o
-                efeito. O teto em `svh` é o que garante que o hero inteiro
-                caiba numa tela de 720px de altura — sem ele, o trecho
-                fixado cortaria a trilha de frentes em notebook. */}
+                efeito. No celular ocupa a largura inteira; a partir de 768px
+                a altura manda, com teto em `svh` para o hero inteiro caber
+                numa tela de 720px de altura — sem ele, o trecho fixado
+                cortaria a trilha de frentes em notebook. */}
             <span data-hero-nome className="block">
               <Letreiro
                 animado
                 atraso={ABERTURA}
                 passo={PASSO_NOME}
-                className="text-texto h-[min(clamp(4.5rem,0.9rem+19vw,17rem),30svh)] w-auto"
+                className="text-texto h-auto w-full md:h-[min(clamp(4.5rem,0.9rem+19vw,17rem),30svh)] md:w-auto"
               />
             </span>
 
@@ -222,7 +218,7 @@ export function Hero() {
           </div>
         </Container>
 
-        <Container className="relative pb-8 md:pb-10">
+        <Container className="relative hidden pb-10 md:block">
           <div data-hero-resto>
             <div className="entrar" style={{ animationDelay: "1.45s" }}>
               <TrilhaDeFrentes />

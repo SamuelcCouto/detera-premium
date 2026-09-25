@@ -214,7 +214,10 @@ export function Cases() {
               como case.
             </p>
 
-            <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            {/* No celular, deslizando para o lado como as entregas de
+                Soluções: são dois cards de apoio, e empilhados eles
+                ocupavam duas telas depois dos cases principais. */}
+            <div className="deslize mt-8 md:grid md:grid-cols-2 md:gap-6">
               {projetosEmConstrucao.map((projeto) => (
                 <article key={projeto.id} data-surgir className="bloco flex flex-col">
                   <PreviaCase

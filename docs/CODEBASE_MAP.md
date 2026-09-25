@@ -165,7 +165,7 @@ Todos client, todos com `useGSAP` e `gsap.matchMedia(COM_MOVIMENTO)`: com movime
 | Arquivo | Função |
 |---|---|
 | `smooth-scroll.tsx` | Lenis ligado ao ticker do GSAP (uma vez no `layout.tsx`); âncoras rolam pelo Lenis e levam o foco junto |
-| `hero-cena.tsx` | Pin #1 (`+=90%`, só em tela ≥ 768 × 640): desfaz `[data-letra-desfaz]`, leva `[data-hero-coracao]` ao centro, avança o céu. Abaixo disso, desfaz sem pin. Marco `data-fim-do-hero` para o cabeçalho |
+| `hero-cena.tsx` | Pin #1 (`+=90%`) em qualquer largura, desde que o hero caiba na tela — medido depois de a Oxanium carregar: desfaz `[data-letra-desfaz]`, leva `[data-hero-coracao]` ao centro (30% do menor lado da tela, entre 96 e 130px), avança o céu. Se não couber, desfaz sem pin. Marco `data-fim-do-hero` para o cabeçalho |
 | `manifesto-cena.tsx` | Pin #2 (`+=320%`): põe `.manifesto--palco` e roda os quatro pares + fecho |
 | `contador.tsx` | Nota do PageSpeed contando até o valor medido (o HTML já traz o final) |
 | `revelar.tsx` | Bloco que abre do centro por `clip-path` (Chamada). A tela das prévias faz o mesmo dentro de `case-preview.tsx` |
@@ -291,6 +291,7 @@ sequenceDiagram
 | `.aura` | Brilho radial parado, parametrizado por `--aura-*` (a do hero é conduzida pela rolagem) |
 | `.estrela`, `.cadente`, `.cometa` | O céu. A camada não deriva mais em loop; onde anda, é a rolagem que move |
 | `.manifesto--palco`, `.manifesto__*` | Layout do manifesto fixado, só em `@media screen` |
+| `.deslize` | Carrossel horizontal nativo com `scroll-snap`, só abaixo de 768px (entregas de Soluções, "Também em obra"). Dentro de grade, o item pai precisa de `min-w-0` |
 | `.marca-viva` e filhas | A marca viva |
 | `.meteoro`, `.letra-meteoro`, `.letreiro-relevo`, `.marca-varredura` | Entrada do nome e do slogan |
 | `.entrar` | Entrada do hero, por tempo |
@@ -375,6 +376,7 @@ Todo o resto — a marca, o céu, as seções, os botões — é renderizado no 
 14. **`view()` não anda dentro de trecho fixado** — o elemento fica `fixed` e a timeline congela. Nada dentro do hero ou do manifesto usa `data-surgir`; lá quem manda é o GSAP.
 15. **Uma animação por elemento.** O que entra ao carregar (`.meteoro`, `.letra-meteoro`, `.entrar`) tem invólucro próprio para a rolagem (`data-letra-desfaz`, `data-hero-resto`). Juntos, a rolagem grava o quadro do meio da entrada e o elemento some ao voltar ao topo.
 16. **O cabeçalho é `fixed`.** Seção nova no topo precisa descontar 4.5rem; o vidro fosco é ligado por `IntersectionObserver` no marco `data-fim-do-hero`, não por ScrollTrigger (o cabeçalho vem antes do pin na página).
+17. **Carrossel dentro de grade estoura a página.** Item de grade tem `min-width: auto` e não encolhe abaixo do conteúdo — e o conteúdo de um `.deslize` é a faixa inteira. Sem `min-w-0` (e colunas em `minmax(0, …)`), a página fica mais larga que a tela no celular: o cabeçalho fixo perde o botão e o coração do hero mira um "centro" fora dela.
 
 ## Guia de navegação
 

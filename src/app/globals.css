@@ -1001,6 +1001,49 @@
   }
 }
 
+/* ------------------------------------------------------------------
+   Deslize — carrossel horizontal nativo, só no celular.
+
+   Rolagem do próprio navegador com encaixe (`scroll-snap`), sem
+   JavaScript: o dedo já sabe usar, e com movimento reduzido não há nada
+   a desligar. A faixa sangra até a borda da tela (margem negativa do
+   tamanho do respiro do container) e cada card ocupa 82% dela, para a
+   ponta do próximo aparecer e dizer que há mais para o lado.
+
+   Fora do celular a classe não faz nada — quem a usa define o próprio
+   layout com `md:`.
+   ------------------------------------------------------------------ */
+@media (max-width: 47.99rem) {
+  .deslize {
+    display: flex;
+    gap: 0.75rem;
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
+    padding-bottom: 0.25rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1.5rem;
+    scrollbar-width: none;
+  }
+
+  .deslize::-webkit-scrollbar {
+    display: none;
+  }
+
+  .deslize > * {
+    flex: 0 0 82%;
+    scroll-snap-align: start;
+  }
+
+  /* Dentro da faixa, o scroller mais próximo do card é ela mesma, que só
+     anda na horizontal: a linha do tempo `view()` do surgir nunca
+     avançaria, e o card ficaria parado no quadro inicial, invisível. */
+  .deslize > [data-surgir] {
+    animation: none;
+  }
+}
+
 /* ==================================================================
    Manifesto em palco — o momento marcante (`ManifestoCena`).
 

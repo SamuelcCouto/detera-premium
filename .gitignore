@@ -1,0 +1,22 @@
+node_modules
+.next
+out
+build
+.DS_Store
+*.pem
+npm-debug.log*
+# Qualquer .env fica de fora — `.env*.local` sozinho deixava passar um
+# `.env` ou `.env.production` com credencial real dentro.
+.env
+.env.*
+!.env.example
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+# A skill fica versionada em `.agents/skills/` (com o `skills-lock.json`).
+# `.claude/skills/` é só uma junção do Windows apontando para lá, criada pelo
+# `npx skills add` — commitada, o Git atravessaria o link e guardaria uma
+# segunda cópia dos mesmos arquivos. Em outra máquina, o mesmo comando
+# (`npx skills add https://github.com/anthropics/skills --skill frontend-design`)
+# recria a junção.
+.claude/skills/

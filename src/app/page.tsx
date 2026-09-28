@@ -16,12 +16,15 @@ import { EmpresaJsonLd, PerguntasJsonLd } from "@/lib/seo/json-ld";
  * A ordem das seções é o argumento comercial do site, e por isso mora aqui em
  * vez de se espalhar por componentes:
  *
- *   marca → prova → problema reconhecível → o que fazemos →
- *   por que temos cara própria → como funciona → chamada → quem somos →
- *   objeções → contato
+ *   marca → por que temos cara própria → prova → problema reconhecível →
+ *   o que fazemos → como funciona → chamada → quem somos → objeções →
+ *   contato
  *
- * A prova vem logo depois da apresentação de propósito: antes de explicar
- * qualquer coisa, mostrar o que já foi construído.
+ * O manifesto vem colado no hero (em teste): o slogan acabou de ser dito, e
+ * a seção seguinte explica a frase antes de mostrar os projetos. Na ordem
+ * anterior ele ficava depois de Soluções, fundo demais para quem só passa
+ * os olhos. Se não agradar, a alternativa é logo depois de Cases, mantendo a
+ * prova antes de qualquer explicação.
  *
  * Cada bloco responde à pergunta que o anterior deixa em aberto.
  */
@@ -36,10 +39,10 @@ export default function Home() {
 
       <main id="conteudo">
         <Hero />
+        <Personalidade />
         <Cases />
         <Diagnostico />
         <Solucoes />
-        <Personalidade />
         <Processo />
         <Chamada />
         <Sobre />

@@ -1,70 +1,80 @@
 ---
-last_mapped: 2026-09-22T23:35:19Z
-total_files: 61
-total_tokens: 66663
+last_mapped: 2026-09-28T11:39:39Z
+total_files: 82
+total_tokens: 107819
 ---
 
 # Mapa do código — DETERA
 
-> Gerado pelo Cartographer. Último mapeamento: 22/09/2026, 23:35 UTC.
+> Gerado pelo Cartographer. Último mapeamento: 28/09/2026, 11:39 UTC (v2: movimento próprio inspirado em Undertale).
 
-Site institucional de página única da DETERA. Next.js 16 (App Router + Turbopack), React 19, TypeScript estrito, Tailwind CSS v4, e GSAP + ScrollTrigger + Lenis (pelo npm) para a rolagem cinematográfica da versão premium. Tudo é pré-renderizado estático; não existe backend, rota de API nem banco. O formulário de contato monta a mensagem e abre o WhatsApp — nada sai do navegador para um servidor nosso.
+Site institucional de página única da DETERA. Next.js 16 (App Router + Turbopack), React 19, TypeScript estrito, Tailwind CSS v4, GSAP + ScrollTrigger + Lenis (pelo npm; a CSP bloqueia CDN). Tudo é pré-renderizado estático; não existe backend, rota de API nem banco. O formulário de contato monta a mensagem e abre o WhatsApp, sem nada sair do navegador para um servidor nosso.
+
+A v2 trocou a coreografia inteira por uma **identidade de movimento** tirada do próprio nome (DET = DETERMINAÇÃO, referência a Undertale): o coração se monta em placas, a linha de energia carrega, o texto é "falado" letra a letra, um cursor-coração marca a escolha, etapas lidas ficam "salvas". O plano aprovado está em [design-plan.md](design-plan.md) e o manual da marca em [identidade/](identidade/README.md).
 
 ## Visão geral
 
 ```mermaid
 graph TB
     subgraph App["src/app — shell, SEO e erros"]
-        Layout[layout.tsx<br/>metadata · analytics · recado no console]
+        Layout[layout.tsx<br/>metadata · preload da fonte · CeuVivo · SmoothScroll]
         Page[page.tsx<br/>ordem das seções]
-        CSS[globals.css<br/>tokens @theme · keyframes · print]
-        OG[opengraph-image.tsx]
-        Icon[icon.tsx]
-        Robots[robots.ts / sitemap.ts]
+        CSS[globals.css<br/>tokens @theme · cursor-coração · grades · fala · print]
+        OG[opengraph-image.tsx / icon.tsx]
     end
 
-    subgraph Secoes["components/sections"]
-        Hero --> Nave[nave.tsx · client]
-        Cases --> Previa[case-preview.tsx · client]
-        Outras[Diagnostico · Solucoes · Personalidade<br/>Processo · Chamada · Sobre · Perguntas · Contato]
-        Estrelas[estrelas.tsx<br/>céu determinístico, CSS puro]
+    subgraph Movimento["components/motion (client)"]
+        Ceu[ceu-vivo.tsx<br/>um canvas para o céu todo]
+        Lenis[smooth-scroll.tsx]
+        HeroCena[hero-cena.tsx · pin 1]
+        Manifesto[manifesto-cena.tsx · pin 2]
+        Outros[caminho-salvo · selecao-rolagem<br/>dialogo · contador · filete]
     end
 
-    subgraph Marca["components/brand"]
+    subgraph Gestos["src/lib — gestos compartilhados"]
+        Motion[motion.ts<br/>registro GSAP · COM_MOVIMENTO]
+        Fala[fala.ts<br/>falar / apagar]
+        Montar[montar-coracao.ts]
+        Grade[grade.ts<br/>criarGrade]
+        Aleat[utils/aleatorio.ts<br/>xorshift com semente]
+    end
+
+    subgraph Marca["components/brand (servidor)"]
         Paths[marca-paths.ts<br/>geometria única]
+        Coracao[coracao.tsx<br/>coração em 7 faixas]
         Wordmark[wordmark.tsx<br/>Simbolo · Letreiro · Wordmark]
-        Meteoro[texto-meteoro.tsx]
+        TextoFala[texto-fala.tsx]
     end
 
-    subgraph Dados["dados e utilidades"]
-        Content[content/*.ts<br/>todo o texto das seções]
-        Site[config/site.ts<br/>identidade · contato · URL]
-        Nav[config/nav.ts]
-        Lib[lib: cn · env · whatsapp · json-ld]
-        Form[features/contato<br/>form.tsx client + schema.ts zod]
+    subgraph Secoes["components/sections (servidor, salvo exceções)"]
+        Hero & Personalidade & Processo & Solucoes & Chamada & Cases
+        Resto[Diagnostico · Sobre · Perguntas · Contato]
     end
 
-    Page --> Hero & Cases & Outras
-    Page --> JsonLd[lib/seo/json-ld.tsx]
-    Hero & Cases & Outras --> Estrelas
-    Hero --> Wordmark & Meteoro
-    Paths --> Wordmark & OG & Icon
-    Outras --> Content
-    Cases --> Content
-    Outras --> Form
-    Form --> Lib
-    Lib --> Site
-    Layout --> Site
-    Robots --> Site
-    JsonLd --> Content & Site
+    Dados[content/*.ts · config/* · features/contato]
+
+    Layout --> Ceu & Lenis
+    Page --> Hero & Cases & Solucoes & Personalidade & Processo & Chamada & Resto
+    Hero --> HeroCena
+    Personalidade --> Manifesto
+    Processo & Solucoes & Chamada & Cases --> Outros
+    HeroCena --> Fala & Montar & Grade
+    Manifesto --> Fala & Montar
+    Outros --> Fala
+    Ceu & Grade --> Aleat
+    HeroCena & Manifesto & Outros & Ceu & Lenis --> Motion
+    Paths --> Coracao & Wordmark & OG
+    Coracao --> Wordmark
+    Hero & Personalidade & Chamada --> TextoFala
+    Secoes --> Dados
 ```
 
-A dependência corre num sentido só: `page → sections → ui/brand → content/config/lib`. Nada em `content/`, `config/` ou `lib/` importa de `components/`.
+A dependência corre num sentido só: `page → sections → motion/brand/ui → lib → content/config`. Nada em `content/`, `config/` ou `lib/` importa de `components/`. As seções continuam sendo componentes de servidor: o movimento entra por um invólucro client (`HeroCena`, `ManifestoCena`, `CaminhoSalvo`…) que recebe a seção como `children` e acha o que animar por `data-*`.
 
 ## Estrutura de diretórios
 
 ```
-detera/
+deteratestepremium/
 ├── next.config.ts          # CSP, headers de segurança, redirects das URLs antigas — função da fase, não do NODE_ENV
 ├── README.md               # decisões de marca e produto
 ├── .env.example            # NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_WHATSAPP_NUMBER
@@ -72,22 +82,24 @@ detera/
 │   ├── cases/              # fotos dos cases, copiadas (não hotlinkadas)
 │   └── fonts/              # Oxanium variável, latin + latin-ext (woff2)
 ├── docs/
-│   └── CODEBASE_MAP.md     # este arquivo
+│   ├── CODEBASE_MAP.md     # este arquivo
+│   ├── design-plan.md      # plano v2 aprovado: paleta, contraste WCAG, identidade de movimento, mapa de seções
+│   └── identidade/         # manual da marca (PDF, DOCX), logo em SVG/PNG e o código que gera tudo
 └── src/
     ├── app/                # layout, página, CSS global, erros, favicon, imagem OG, robots, sitemap
     ├── components/
-    │   ├── brand/          # a marca: geometria, símbolo, nome desenhado, texto em meteoro
+    │   ├── brand/          # geometria, coração em faixas, símbolo, nome desenhado, texto falado
     │   ├── layout/         # header (client) e footer
-    │   ├── motion/         # coreografias de rolagem (client): Lenis, hero fixado, manifesto, revelações
-    │   ├── sections/       # uma seção por arquivo + estrelas + nave + prévia de case
-    │   └── ui/             # button, botao-nucleo, container, section, ícones
+    │   ├── motion/         # céu em canvas, Lenis e as coreografias (client)
+    │   ├── sections/       # uma seção por arquivo + nave + prévia de case
+    │   └── ui/             # button, container, section, ícones em pixel
     ├── config/             # site.ts (identidade e contato) e nav.ts
     ├── content/            # todo o texto das seções, separado da apresentação
     ├── features/contato/   # formulário + schema zod + montagem da mensagem
-    └── lib/                # motion.ts (registro do GSAP, Lenis), seo/json-ld e utils (cn, env, whatsapp)
+    └── lib/                # motion.ts, fala.ts, grade.ts, montar-coracao.ts, seo/json-ld e utils
 ```
 
-Fora do produto: `.claude/launch.json` (servidor do preview) e a skill `frontend-design`, instalada via `npx skills` — versionada em `.agents/skills/` com o `skills-lock.json`. `.claude/skills/` é uma junção do Windows para lá, fora do Git; em outra máquina, `npx skills add https://github.com/anthropics/skills --skill frontend-design` recria.
+Fora do produto: `.claude/launch.json` (servidores do preview: `dev` e `site-producao` na porta 3100) e a skill `frontend-design`, versionada em `.agents/skills/` com o `skills-lock.json`.
 
 ## Guia por módulo
 
@@ -95,94 +107,136 @@ Fora do produto: `.claude/launch.json` (servidor do preview) e a skill `frontend
 
 | Arquivo | Função | Tokens |
 |---|---|---|
-| `layout.tsx` | HTML raiz, `metadata`, `viewport`, Vercel Analytics/Speed Insights, recado no console | 1098 |
+| `layout.tsx` | HTML raiz, `metadata`, `viewport`, preload de `/fonts/oxanium-latin.woff2`, monta `<CeuVivo />` antes dos filhos e `<SmoothScroll />` depois, Vercel Analytics/Speed Insights, recado no console | 1272 |
 | `page.tsx` | Compõe a página inteira, na ordem do argumento de venda | 448 |
-| `globals.css` | Tokens `@theme`, `@font-face` da Oxanium, todas as classes e keyframes, bloco de impressão | 9996 |
-| `error.tsx` | Erro de segmento (client). Mostra só o `digest`, nunca a pilha | 568 |
-| `global-error.tsx` | Erro no próprio layout (client). Cores fixas em linha — o CSS pode não ter carregado | 591 |
+| `globals.css` | Tokens `@theme`, `@font-face` da Oxanium, cursor-coração, grades de blocos, fala, palco do manifesto, keyframes, impressão, movimento reduzido | 8591 |
+| `error.tsx` | Erro de segmento (client). Mostra só o `digest`, nunca a pilha | 564 |
+| `global-error.tsx` | Erro no próprio layout (client). Cores fixas em linha: o CSS pode não ter carregado | 591 |
 | `not-found.tsx` | 404 com `noindex` | 340 |
 | `icon.tsx` | Favicon 32px via `next/og`, subconjunto da geometria (sem os traços) | 420 |
-| `opengraph-image.tsx` | Imagem de compartilhamento 1200×630 com símbolo, nome desenhado, slogan e as quatro frentes | 1052 |
+| `opengraph-image.tsx` | Imagem de compartilhamento 1200×630 | 1052 |
 | `robots.ts` / `sitemap.ts` | Bloqueiam tudo sem domínio público; sitemap de uma URL só | 248 |
 
-**Ordem da página** (`page.tsx`): link "Pular para o conteúdo" → `Header` → `Hero` → `Cases` → `Diagnostico` → `Solucoes` → `Personalidade` → `Processo` → `Chamada` → `Sobre` → `Perguntas` → `Contato` → `Footer` → `EmpresaJsonLd` + `PerguntasJsonLd`. O comentário do arquivo descreve a narrativa: marca → prova → problema reconhecível → o que fazemos → por que temos cara própria → como funciona → chamada → quem somos → objeções → contato.
+**Ordem da página e densidade do céu** (`data-ceu`, de 0 a 1, lida pelo `CeuVivo`):
+
+| # | Seção | `id` | Fundo | `ceu` |
+|---|---|---|---|---|
+| 1 | `Hero` | `topo` | vazio | 1 |
+| 2 | `Cases` | `projetos` | camada | 0.35 |
+| 3 | `Diagnostico` | `diagnostico` | vazio | 0.55 |
+| 4 | `Solucoes` | `solucoes` (alias `servicos`) | camada | 0.2 |
+| 5 | `Personalidade` | `personalidade` | vazio | 0.85 |
+| 6 | `Processo` | `processo` (alias `como-funciona`) | camada | 0.2 |
+| 7 | `Chamada` | — | vazio | 0.5 |
+| 8 | `Sobre` | `sobre` | camada | 0.45 |
+| 9 | `Perguntas` | `perguntas` | vazio | 0.15 |
+| 10 | `Contato` | `contato` | camada | 0.8 |
+| — | `Footer` | — | transparente | 0.25 |
+
+Antes vêm o link "Pular para o conteúdo" e o `Header`; depois, `EmpresaJsonLd` + `PerguntasJsonLd`. A curva do céu é forte nos momentos (hero, manifesto, contato) e quase apagada onde se lê muito. `vazio` é transparente (o céu aparece); `camada` é `bg-camada/90`.
 
 ### `src/components/brand/` — a marca
 
+Nenhum é client. O que se move é animado de fora, por `data-*`.
+
 | Arquivo | Função | Tokens |
 |---|---|---|
-| `marca-paths.ts` | Fonte única da geometria: `NOME_DETERA` (6 letras traçadas à mão), `NOME_DETERA_VIEWBOX` (`0 0 716 202`), `ALTURA_LETRAS` (128), `MARCA_METADE`, `MARCA_NUCLEO`, `MARCA_LINHA`, `MARCA_TRACOS` (sistema `0 0 32 40`) | 1299 |
-| `wordmark.tsx` | `Simbolo` (coração de placas, metade direita espelhada), `Letreiro` (o nome desenhado; com `animado`, queda letra a letra, luz vermelha e o símbolo pequeno sob o "A"), `Wordmark` (símbolo + nome, rodapé) | 2192 |
-| `texto-meteoro.tsx` | `TextoMeteoro`: texto que cai letra a letra, quebrando por palavra, com cópia `sr-only` | 671 |
+| `marca-paths.ts` | Fonte única da geometria: `NOME_DETERA` (6 letras traçadas à mão, várias com `evenodd`), `NOME_DETERA_VIEWBOX` (`0 0 716 202`), `ALTURA_LETRAS` (128), `MARCA_METADE`, `MARCA_NUCLEO`, `MARCA_LINHA`, `MARCA_TRACOS` (sistema `0 0 32 40`) | 1299 |
+| `coracao.tsx` | `CoracaoBlocos({ id })`: o coração recortado em `FAIXAS_DO_CORACAO` (7) faixas por `clipPath`, metade direita espelhada. Marca `data-bloco` (+ `data-faixa`, `data-lado`), `data-linha`, `data-traco`, `data-nucleo` | 939 |
+| `wordmark.tsx` | `Simbolo`, `Letreiro`, `Wordmark` (abaixo) | 1620 |
+| `texto-fala.tsx` | `TextoFala({ texto })`: cópia `sr-only` + `<span aria-hidden data-fala>` com um `<span data-fala-letra style="--i:n">` por caractere visível | 508 |
 
-Nenhum é client. O movimento da marca (placas respirando, núcleo pulsando, traços piscando) é só CSS (`.marca-viva`).
+**Modos do `Simbolo({ className, vivo, montavel })`**
+- parado (padrão): paths estáticos. Rodapé, erro, 404.
+- `vivo`: ganha `.marca-viva` (placas respirando, núcleo pulsando, traços piscando, tudo em CSS). **Só o cabeçalho.**
+- `montavel="<id>"`: renderiza `CoracaoBlocos` com esse prefixo de `clipPath`, para `montarCoracao`. Usado no fecho do manifesto (`fecho-coracao`).
+
+**Modos do `Letreiro({ className, animado })`**
+- sem `animado`: `viewBox 0 0 716 128`, sem o espaço do coração (alinha no rodapé).
+- `animado` (só no hero): `viewBox 0 0 716 202`; cada letra é `<g data-letra-desfaz><g data-letra-entra>` (rolagem por fora, entrada por dentro) e o coração sob o "A" é `<g data-hero-coracao><g data-coracao-entra>` com `CoracaoBlocos id="hero-coracao"`.
+
+`Wordmark({ tamanho })` = `Simbolo` parado + `Letreiro` sem animação.
 
 ```mermaid
 graph LR
-    P[marca-paths.ts] --> S[Simbolo<br/>DOM, animado]
-    P --> L[Letreiro<br/>DOM, queda + varredura]
+    P[marca-paths.ts] --> C[coracao.tsx<br/>7 faixas]
+    P --> S[Simbolo]
+    P --> L[Letreiro]
+    C --> S & L
     P --> I[icon.tsx<br/>32px, sem traços]
-    P --> O[opengraph-image.tsx<br/>1200×630, completo]
+    P --> O[opengraph-image.tsx]
+    P --> G[docs/identidade/fonte<br/>gerar-logo · gerar-manual]
 ```
 
-Os três destinos não compartilham runtime — só esse arquivo. Mudou a marca, confere os três.
+Os destinos não compartilham runtime, só esse arquivo. Mudou a marca, confira todos e gere o manual de novo.
+
+### `src/components/motion/` — a coreografia
+
+Todos client, com `useGSAP` e `gsap.matchMedia(...)`. Com movimento reduzido quase nada é criado e o HTML do servidor vale como está (exceções na tabela). Recebem o conteúdo como `children` e acham o que animar por `data-*`, não por classe de estilo.
+
+| Arquivo | Função | Tokens |
+|---|---|---|
+| `ceu-vivo.tsx` | **Um único `<canvas class="ceu-vivo">`** fixo atrás da página, no lugar das 174 estrelas animadas em CSS da v1. 90 a 260 estrelas conforme a área, 3 camadas de profundidade, rastro proporcional à velocidade da rolagem, cintilar em 5 degraus. Densidade por seção lida de `[data-ceu]` (usa o `.pin-spacer` como posição real das seções fixadas), remedida só no `refresh` do ScrollTrigger. PRNG `criarGerador(20260927)`. DPR limitado (1,5 celular / 2 desktop), ~30 fps parado, pausa com a aba oculta, ignora mudança de altura pequena no celular (barra do navegador). Movimento reduzido: desenha uma vez, parado | 2851 |
+| `smooth-scroll.tsx` | Lenis no ticker do GSAP (`lagSmoothing(0)`), `fonts.ready → ScrollTrigger.refresh()`. Âncoras: `lenis.start()` (o menu para o Lenis), destino é o `.pin-spacer` se houver, **sem `offset`** (o Lenis já desconta `scroll-padding-top`), `pushState`, foco com `tabindex=-1` num `setTimeout 0` (o `<main>` ainda pode estar `inert`). Movimento reduzido: sem Lenis, rolagem nativa | 923 |
+| `hero-cena.tsx` | **Pin 1.** Entrada: o coração aparece grande no centro, se monta (`montarCoracao`) e vai ao lugar sob o "A"; as letras sobem em `steps(3)`; o slogan é falado; `[data-entra]` aparece. Rolagem (`+=130%`, `scrub`, `anticipatePin`): apaga o slogan, derruba as letras em `steps(4)`, leva o coração ao centro e faz a **travessia do núcleo** (grade vermelha de `criarGrade` cresce a partir do núcleo e os blocos se apagam). Marco `data-fim-do-hero` para o cabeçalho | 3037 |
+| `manifesto-cena.tsx` | **Pin 2** (`+=240%`), só com movimento e `min-height: 560px`. Põe `.manifesto--palco`; para cada par: fala a frase genérica (a partir do 2º), acende a voz, fala a específica, marca o progresso, troca o par de uma vez, como caixa de diálogo. Fecho: `montarCoracao` + fala | 1284 |
+| `caminho-salvo.tsx` | Processo: cada `[data-etapa]` a 60% da tela ganha `data-selecionada`/`data-salvo` (troca instantânea). A partir de 768px, o coração `[data-volta-alma]` percorre o laço 05 → 01 em degraus, com as pernas medidas de `.ciclo-volta` (`invalidateOnRefresh`) | 928 |
+| `selecao-rolagem.tsx` | Soluções: o cursor-coração segue a entrega que está sendo lida. ≥768px: ScrollTrigger por `[data-entrega]` a 55%. <768px: `IntersectionObserver` (0,7) dentro de cada `.deslize`. **Roda também com movimento reduzido** (é troca de estado, não animação) | 610 |
+| `dialogo.tsx` | Chamada: a 70% da tela, fala `[data-dialogo-fala]` e mostra `[data-dialogo-resto]`. Por tempo, uma vez só (`once`), não volta ao subir | 412 |
+| `contador.tsx` | Nota do PageSpeed contando até o valor medido em `steps(10)`, `start: "top bottom"` e `once`. O HTML já traz o valor final | 482 |
+| `filete.tsx` | Linha do Diagnóstico desenhada por `scaleX` em 16 degraus, `scrub` entre 92% e 62% | 326 |
+
+**Trechos fixados**: só o hero e o manifesto (a regra é no máximo dois).
+
+- Hero: fixa se `(min-height: 560px)` **e** o palco cabe na tela (`offsetHeight <= innerHeight + 24`). Senão, rola sem pin (`end: "60% top"`), só apagando e desfazendo, sem travessia.
+- Manifesto: sem movimento ou com tela baixa, fica a lista lida em HTML puro.
+
+### `src/lib/` — os gestos compartilhados
+
+| Arquivo | Função | Tokens |
+|---|---|---|
+| `motion.ts` | Registra ScrollTrigger e `useGSAP` (só no navegador), `ScrollTrigger.config({ ignoreMobileResize: true })`, expõe `window.ScrollTrigger` para os scripts de QA. Exporta `definirLenis`, `obterLenis`, `prefereMenosMovimento`, `COM_MOVIMENTO`, `gsap`, `ScrollTrigger`, `useGSAP` | 513 |
+| `fala.ts` | `falar(tl, bloco, { inicio, porLetra, pausa })` e `apagar(...)`: **uma** tween por bloco conduz um relógio numérico gravado em `--fala` (ou `--resto`), com pausa extra depois de `.,;:!?`. Reaplica no `onReverseComplete` para o `scrub` voltar certo. Devolve o tempo final | 825 |
+| `montar-coracao.ts` | `montarCoracao(tl, raiz, { inicio, passo })`: faixas de baixo para cima, esquerda antes da direita, em `steps(2)`; depois a linha carrega (`steps(6)`), os traços acendem e o núcleo liga (`steps(3)`). Devolve o tempo final | 741 |
+| `grade.ts` | `criarGrade(conteiner, { lado, semente, classe })`: cria os `<span class="grade-bloco">` direto no DOM (medidos na hora e disponíveis no mesmo quadro do `useGSAP`), grava `--grade-colunas`/`--grade-linhas`, devolve `{ blocos, remover }` com os blocos já na ordem sorteada. Usado por hero (travessia), prévia dos cases (montagem) e menu | 498 |
+| `utils/aleatorio.ts` | `criarGerador(semente)` (xorshift) e `ordemSorteada(n, semente)` | 306 |
+| `seo/json-ld.tsx` | `EmpresaJsonLd` (`ProfessionalService` com catálogo vindo de `pilares`) e `PerguntasJsonLd` (`FAQPage`); `serializar()` escapa `<` | 789 |
+| `utils/cn.ts` | Junta classes e resolve conflito de Tailwind com `twMerge` | 166 |
+| `utils/env.ts` | `env()`: string vazia conta como ausente (é assim que a Vercel entrega variável declarada e não preenchida) | 90 |
+| `utils/whatsapp.ts` | `whatsappUrl(texto)` → `https://wa.me/{numero}?text=…` | 112 |
 
 ### `src/components/layout/`
 
 | Arquivo | Função | Tokens |
 |---|---|---|
-| `header.tsx` | Cabeçalho fixo, só o símbolo, menu mobile, CTA de WhatsApp. Client por causa do menu (estado, trava de rolagem, Escape) | 1249 |
-| `footer.tsx` | Assinatura completa, navegação, canais, redes, linha legal. Fecha a trilha (`trilha--fim`) | 1143 |
-
-O menu mobile usa `hidden={!menuAberto}` em vez de desmontar: os links continuam no HTML entregue, visíveis para buscador.
+| `header.tsx` | Client. Fixo; transparente no hero e sólido (`border-borda bg-vazio`, sem blur) depois, por `IntersectionObserver` no marco `data-fim-do-hero` com `rootMargin "100000px 0px -2px 0px"`. `Simbolo vivo`, links `.escolha`, CTA de WhatsApp. Menu mobile em tela cheia abaixo do cabeçalho, com preenchimento em blocos (`criarGrade`, `.grade-menu`); abre com Lenis parado + `overflow: hidden`, `inert` em `main`/`footer`/pular-conteúdo, Esc devolve o foco ao botão, fecha sem animação | 2502 |
+| `footer.tsx` | Servidor. `data-ceu 0.25`, transparente, fecha a trilha (`trilha--fim`). `Wordmark`, navegação, canais, ícones em pixel, "Goiânia, GO", linha legal com o fundador | 1163 |
 
 ### `src/components/sections/`
 
-| Arquivo | Função | Conteúdo | Tokens |
+| Arquivo | Função | Invólucro / ganchos | Tokens |
 |---|---|---|---|
-| `hero.tsx` | Hero em 100svh, fixado por `HeroCena`: nome caindo (ao carregar), desfeito letra a letra na rolagem; o coração sob o "A" vai ao centro e acende. Slogan, CTAs, trilha das frentes, céu, auras, jogo na margem | `pilares`, `site.slogan` | 2097 |
-| `nave.tsx` | Jogo de nave em canvas na margem esquerda (≥1680px). Client | — | 4489 |
-| `estrelas.tsx` | Céu de fundo: estrelas, cadentes, cometas, nebulosa. PRNG xorshift com semente por seção | — | 2545 |
-| `cases.tsx` | Os dois cases (com notas medidas do PageSpeed) + "Também em obra" | `cases`, `em-construcao` | 2575 |
-| `case-preview.tsx` | Moldura de navegador: fotos em rodízio, iframe isolado ou aviso. Client (fallback de erro) | tipo `ImagemPrevia` | 1907 |
-| `diagnostico.tsx` | Os quatro sintomas | `diagnostico` | 388 |
-| `solucoes.tsx` | As quatro frentes e suas entregas, CTA de WhatsApp por frente | `pilares` | 1041 |
-| `personalidade.tsx` | O momento marcante: fixada por `ManifestoCena`, cada frase genérica recua e a específica se resolve do blur ao nítido. Sem movimento, é a lista genérico × específico | `personalidade` | 751 |
-| `processo.tsx` | Cinco etapas numeradas + o laço `05 → 01` desenhado na rolagem | `processo` | 1403 |
-| `chamada.tsx` | Bloco de decisão no meio da página | texto próprio | 670 |
-| `sobre.tsx` | Por que a DETERA existe + fundador | `site` | 1031 |
-| `perguntas.tsx` | FAQ em `<details>` nativo | `perguntas` | 677 |
-| `contato.tsx` | Canais + formulário | `site`, `features/contato` | 932 |
-
-**Volume dos títulos** (três degraus, pelo peso do que a seção diz): `text-display` em Soluções e Sobre; `text-subdisplay` em Cases, Diagnóstico, Personalidade e Contato; `text-title` em Processo e Perguntas.
-
-**Densidade do céu** (`<Estrelas quantidade>`): hero 96, contato 72, diagnóstico 48, personalidade 44, chamada 38, sobre 40, cases 30, soluções 22, processo 20, perguntas 16. É uma curva: forte nos momentos, quase apagado onde se lê muito.
-
-### `src/components/motion/` — a coreografia da rolagem
-
-Todos client, todos com `useGSAP` e `gsap.matchMedia(COM_MOVIMENTO)`: com movimento reduzido nada é criado e o HTML do servidor vale como está. Recebem o conteúdo como `children` e acham o que animar por `data-*`, não por classe de estilo.
-
-| Arquivo | Função |
-|---|---|
-| `smooth-scroll.tsx` | Lenis ligado ao ticker do GSAP (uma vez no `layout.tsx`); âncoras rolam pelo Lenis e levam o foco junto |
-| `hero-cena.tsx` | Pin #1 (`+=90%`) em qualquer largura, desde que o hero caiba na tela — medido depois de a Oxanium carregar: desfaz `[data-letra-desfaz]`, leva `[data-hero-coracao]` ao centro (30% do menor lado da tela, entre 96 e 130px), avança o céu. Se não couber, desfaz sem pin. Marco `data-fim-do-hero` para o cabeçalho |
-| `manifesto-cena.tsx` | Pin #2 (`+=320%`): põe `.manifesto--palco` e roda os quatro pares + fecho |
-| `contador.tsx` | Nota do PageSpeed contando até o valor medido (o HTML já traz o final) |
-| `revelar.tsx` | Bloco que abre do centro por `clip-path` (Chamada). A tela das prévias faz o mesmo dentro de `case-preview.tsx` |
-| `filete.tsx` | Linha que se desenha por `scaleX` (Diagnóstico) |
-| `linha-viva.tsx` | Linha vermelha das etapas do Processo e nós que acendem |
-
-Os dois únicos trechos fixados da página são o hero e o manifesto — a regra é no máximo dois.
+| `hero.tsx` | 100svh (`.hero-palco`): `Letreiro animado`, slogan em `TextoFala`, CTAs, `TrilhaDeFrentes` (≥768px), `Nave` na margem (≥1680px, por CSS), `<div data-travessia class="travessia">` | `HeroCena`; `data-intro`, `data-entra`, `data-hero-nome/slogan/resto/nave` | 1623 |
+| `cases.tsx` | Dois cases com notas medidas do PageSpeed + "Também em obra" em `.deslize`. História em `<details>` com resumo `.escolha`. Datas com `timeZone: "UTC"` | `Contador` | 2601 |
+| `case-preview.tsx` | Client. Moldura com o domínio real (`.alma-marca`), fotos em rodízio só por CSS (`.previa-slide`, `CICLO` 6,9s), iframe com `sandbox=""` ou aviso; "Em obra" com `.obra-barra`/`.obra-recado`. A tela **se monta em blocos** na rolagem (`[data-montagem]`, `criarGrade` com semente tirada do domínio, `scrub` de 88% a 42%) | próprio `useGSAP` | 2411 |
+| `diagnostico.tsx` | Os quatro sintomas | `Filete` | 363 |
+| `solucoes.tsx` | As quatro frentes e suas entregas; cabeçalho da frente fixo por `sticky`; no celular as entregas viram `.deslize` ("Deslize para ver as N entregas"). Colunas em `minmax(0, …)` | `SelecaoRolagem`; `data-entrega`, `.alma-marca` | 1200 |
+| `personalidade.tsx` | O manifesto: quatro pares genérico → específico e o fecho com `Simbolo montavel="fecho-coracao"`. A lista é HTML real; o palco é uma camada de CSS por cima | `ManifestoCena`; `data-par`, `data-generico`, `data-especifico`, `data-voz`, `data-progresso-vivo`, `data-fecho*` | 978 |
+| `processo.tsx` | Cinco etapas como pontos de salvamento + o laço 05 → 01 (`.ciclo-volta`, só ≥768px) | `CaminhoSalvo`; `data-etapa`, `data-volta-alma`, `data-volta` | 1213 |
+| `chamada.tsx` | Caixa de diálogo (`.caixa-dialogo`) com a pergunta falada e duas escolhas (`.escolhas` > `.escolha`, a primeira com `data-selecionada`) | `Dialogo`; `data-dialogo-fala`, `data-dialogo-resto` | 633 |
+| `sobre.tsx` | Por que a DETERA existe (inclui a referência a Undertale) + fundador; coluna `sticky` só em CSS | — | 1112 |
+| `perguntas.tsx` | FAQ em `<details>` nativo; pergunta com `.escolha`, resposta abre em degraus (`.resposta`) | — | 671 |
+| `contato.tsx` | Canais (`.escolha`) + formulário | — | 867 |
+| `nave.tsx` | Client. Jogo de nave em canvas na margem do hero (≥1680px), estado do jogo em variáveis do loop, só o placar em `useState` | — | 4494 |
 
 ### `src/components/ui/`
 
 | Arquivo | Função | Tokens |
 |---|---|---|
-| `button.tsx` | `Button`, `ButtonLink` (escolhe `<a>` ou `next/link` pelo href), `buttonStyles`; os estados vivem em `.btn*` no CSS | 669 |
-| `botao-nucleo.tsx` | O CTA com brilho que segue o ponteiro (`--mx`/`--my`). Client. Reservado para 2–3 CTAs | 409 |
+| `button.tsx` | `Button`, `ButtonLink` (escolhe `<a>` ou `next/link` pelo href; `target="_blank"` só em http/https), `buttonStyles`; variantes `determinacao`, `contorno`, `fantasma`. Estados em `.btn*` no CSS | 669 |
 | `container.tsx` | Largura: narrow 44rem, default 76rem, wide 88rem | 191 |
-| `section.tsx` | Fundo (`vazio`/`camada`), respiro vertical, trilha, `alias` para âncoras antigas | 478 |
-| `icones.tsx` | Seis ícones desenhados à mão, sem biblioteca | 950 |
+| `section.tsx` | Fundo (`vazio` transparente / `camada` `bg-camada/90`), respiro vertical, `data-ceu` (padrão 0.3), trilha, `alias` para âncoras antigas | 632 |
+| `icones.tsx` | Ícones em pixel numa grade 10×10 (`crispEdges`, sem traço nem curva): `IconeWhatsapp`, `IconeEmail`, `IconeLinkedin`, `IconeGithub`, `IconeLinkExterno`. O gerador do manual lê as tuplas `[x, y, w, h]` daqui | 1301 |
 
 ### `src/config/`
 
@@ -195,31 +249,36 @@ Os dois únicos trechos fixados da página são o hero e o manifesto — a regra
 
 | Arquivo | Exporta | Usado por | Tokens |
 |---|---|---|---|
-| `cases.ts` | `Case`, `Medicao`, `ImagemPrevia`, `cases` | `cases.tsx`, `case-preview.tsx` | 2157 |
-| `pilares.ts` | `Pilar`, `Entrega`, `pilares` | `hero.tsx`, `solucoes.tsx`, `json-ld.tsx` | 1830 |
-| `processo.ts` | `etapas` | `processo.tsx` | 420 |
-| `perguntas.ts` | `perguntas` | `perguntas.tsx`, `json-ld.tsx` | 590 |
-| `diagnostico.ts` | `sintomas` | `diagnostico.tsx` | 316 |
-| `personalidade.ts` | `transformacoes` | `personalidade.tsx` | 340 |
+| `cases.ts` | `Case`, `Medicao`, `ImagemPrevia`, `cases` | `cases.tsx`, `case-preview.tsx` | 2160 |
+| `pilares.ts` | `Pilar`, `Entrega`, `pilares` | `hero.tsx`, `solucoes.tsx`, `json-ld.tsx` | 1794 |
+| `processo.ts` | `etapas` | `processo.tsx` | 403 |
+| `perguntas.ts` | `perguntas` | `perguntas.tsx`, `json-ld.tsx` | 589 |
+| `diagnostico.ts` | `sintomas` | `diagnostico.tsx` | 310 |
+| `personalidade.ts` | `transformacoes` | `personalidade.tsx` | 322 |
 | `em-construcao.ts` | `ProjetoEmConstrucao`, `projetosEmConstrucao` | `cases.tsx` | 507 |
 
-`pilares[].acento` decide a cor: só `infraestrutura` é `sistema` (azul) — "a única frente que não vende movimento, e sim permanência". `cases[].medicao` guarda as notas do PageSpeed com o link permanente do relatório.
+`pilares[].acento` decide a cor: só `infraestrutura` é `sistema` (azul), "a única frente que não vende movimento, e sim permanência". `cases[].medicao` guarda as notas do PageSpeed com o link permanente do relatório; `impacto` é qualitativo de propósito.
 
 ### `src/features/contato/`
 
 | Arquivo | Função | Tokens |
 |---|---|---|
 | `schema.ts` | `contatoSchema` (zod, limite superior em todo campo), `tiposDeProjeto`, `mensagemDeContato()` | 572 |
-| `form.tsx` | `FormularioContato`: valida no cliente e abre o WhatsApp. Client | 1097 |
+| `form.tsx` | Client. `FormularioContato`: valida no cliente e abre o WhatsApp; rótulos com `.alma-marca` e o coração aparece no campo em foco (`.campo-grupo`) | 1118 |
 
-### `src/lib/`
+### `docs/identidade/` — manual da marca
 
 | Arquivo | Função | Tokens |
 |---|---|---|
-| `seo/json-ld.tsx` | `EmpresaJsonLd` (`ProfessionalService` com catálogo vindo de `pilares`) e `PerguntasJsonLd` (`FAQPage`); `serializar()` escapa `<` | 789 |
-| `utils/cn.ts` | Junta classes e resolve conflito de Tailwind com `twMerge` | 166 |
-| `utils/env.ts` | `env()`: string vazia conta como ausente (é assim que a Vercel entrega variável declarada e não preenchida) | 90 |
-| `utils/whatsapp.ts` | `whatsappUrl(texto)` → `https://wa.me/{numero}?text=…` | 112 |
+| `README.md` | O que cada arquivo é, estado do Figma e como gerar de novo | 600 |
+| `fonte/conteudo.mjs` | **Todo o texto do manual**, sem formato: o PDF e o DOCX importam o mesmo módulo | 5709 |
+| `fonte/gerar-logo.mjs` | SVGs do logo lidos de `marca-paths.ts` por regex (símbolo, letreiro, letreiro de apresentação, assinatura × escuro/claro/mono-claro/mono-escuro, mais a alma) | 1328 |
+| `fonte/png.mjs` | Rasteriza 11 SVGs em PNG no Chrome headless (CDP por WebSocket, sem Puppeteer) | 1194 |
+| `fonte/gerar-manual.mjs` | HTML de 19 páginas A4 paisagem; lê os SVGs, as fotos, a Oxanium de `public/fonts`, a geometria e os ícones de `icones.tsx` | 10497 |
+| `fonte/imprimir.mjs` | HTML → PDF (`Page.printToPDF`) + um JPEG por página para conferência; avisa se a Oxanium carregou | 891 |
+| `fonte/gerar-docx.mjs` | DOCX A4 retrato em fundo claro, com `docx@9` e os PNGs | — |
+
+Ordem para gerar: `gerar-logo` → `png` → `gerar-manual` → `imprimir`, e `gerar-docx` depois do `png`. O Figma (arquivo `i5eEIvW5HUH8QErDNPo9Fv`) tem as variáveis de cor, os estilos de texto, o logo como componentes e as pranchas 01 a 08; as pranchas 09 a 13 estão em `figma-pendente/` como imagem.
 
 ## Fluxos
 
@@ -242,75 +301,87 @@ sequenceDiagram
         Z-->>F: dados
         F->>Z: mensagemDeContato(dados)
         F->>W: whatsappUrl(mensagem)
-        F->>WA: window.open(url) — síncrono, senão vira pop-up bloqueado
+        F->>WA: window.open(url), síncrono, senão vira pop-up bloqueado
     end
     Note over F,WA: nenhum servidor nosso recebe nada
 ```
 
-Todo CTA do site (header, hero, soluções, chamada, footer, contato) monta o seu próprio `whatsappUrl(...)` com uma mensagem diferente, para a conversa já começar sabendo de onde a pessoa veio.
+Todo CTA do site monta o seu próprio `whatsappUrl(...)` com uma mensagem diferente, para a conversa já começar sabendo de onde a pessoa veio.
 
-### Entrada do hero
+### Hero: entrada e travessia
 
 ```mermaid
 sequenceDiagram
-    participant L as Letreiro (SVG)
-    participant S as Slogan (TextoMeteoro)
-    participant V as Luz vermelha
-    Note over L: ABERTURA = 0,12s
-    L->>L: 6 letras caem, PASSO_NOME = 0,06s entre elas, QUEDA = 0,66s cada
-    Note over L: FIM_DO_NOME = 0,12 + 5×0,06 + 0,66 = 1,08s
-    L->>S: slogan começa em FIM_DO_NOME − 0,34s
-    L->>V: varredura começa quando a última letra pousa, e repete
+    participant C as Coração (CoracaoBlocos)
+    participant L as Letras
+    participant S as Slogan (TextoFala)
+    participant R as Rolagem (pin +=130%)
+    Note over C: aparece grande no centro
+    C->>C: montarCoracao: faixas de baixo para cima, linha carrega, núcleo liga
+    C->>C: vai ao lugar sob o "A" (power3)
+    C->>L: letras sobem em steps(3)
+    L->>S: falar(): uma tween em --fala, pausa na pontuação
+    S->>S: [data-entra] aparece
+    Note over R: espera a Oxanium (máx. 1,5s), sort + refresh
+    R->>S: apagar() em --resto
+    R->>L: letras caem em steps(4)
+    R->>C: coração ao centro, cresce 1,8×
+    R->>C: travessia: grade vermelha cresce do núcleo e os blocos se apagam
 ```
 
-`QUEDA` em `hero.tsx` tem que bater com a duração de `meteoro-cai` no CSS.
+### Fala (texto dito letra a letra)
+
+`TextoFala` entrega cada letra com `--i`. O CSS calcula `opacity: clamp(0, min(var(--fala) - var(--i), var(--resto) - var(--i)), 1)`. `falar()` anima `--fala` de 0 ao total e `apagar()` anima `--resto` do total a 0. Sem JavaScript, as duas variáveis valem 100000 e o texto está inteiro. Isso trocou 1100+ tweens e dois spans por letra da primeira versão por uma tween por bloco.
 
 ## Tokens de design (`globals.css`, `@theme`)
 
 **Cores**
-- Superfícies: `vazio #07080b`, `camada #0e1015`, `camada-alta #161920`, `borda #23262e`, `borda-viva #363b45`, `contorno #5c626d` (borda de elemento interativo, separada da decorativa para cumprir o contraste 3:1 da WCAG 1.4.11).
-- Texto: `texto #f2f3f5`, `texto-suave #9ba1ac`, `texto-fraco #767c88`.
+- Superfícies: `vazio #07080b`, `camada #0e1015`, `camada-alta #161920`, `borda #23262e`, `borda-viva #363b45`, `contorno #606671` (borda de elemento interativo, 3:1 da WCAG 1.4.11 sobre `camada-alta`).
+- Texto: `texto #f2f3f5`, `texto-suave #9ba1ac`, `texto-fraco #7c828e` (clareado na v2 para passar 4.5:1 também sobre `camada-alta`).
 - Determinação (ação, núcleo): `determinacao #ff3b3b`, `-viva #ff6b6b`, `-funda #3d0f14`.
 - Sistema (infraestrutura, continuidade): `sistema #4c7dff`, `-viva #7ca0ff`, `-funda #10203f`.
 
-**Fonte**: Oxanium para `--font-display`, `--font-sans` e `--font-mono`, variável 200–800, servida de `public/fonts` por `@font-face`.
+A tabela de contraste de cada par texto/fundo, com o tom mais próximo que passa, está em [design-plan.md](design-plan.md).
 
-**Escala**: `marca` → `display` (60px) → `subdisplay` (48px) → `title` (36px) → `heading` → `lead` → `micro`.
+**Fonte**: Oxanium para display, texto e dados, variável 200–800, servida de `public/fonts` por `@font-face` e pré-carregada no `layout.tsx`.
 
-**Forma e ritmo**: `--radius-min 2px`, `--radius-bloco 4px`; `--ease-decidido cubic-bezier(0.2, 0.8, 0.2, 1)`.
+**Escala**: `marca` → `display` → `subdisplay` → `title` → `heading` → `lead` → `micro` (espaçamento 0.02em).
 
-**Classes que importam**
+**Forma e ritmo**: `--radius-min 2px`, `--radius-bloco 4px`; `steps(n)` para tudo que é pixel; `power3` só para deslocamento grande; o cursor salta, sem curva.
 
-| Classe / keyframe | Função |
+**Classes e ganchos que importam**
+
+| Classe / atributo | Função |
 |---|---|
+| `--alma` | Máscara SVG do coração em data-URI, reusada por todo coração de cursor |
+| `.escolha`, `.alma-marca` | **Cursor-coração**: o `::before` com a máscara aparece em hover, foco, `:focus-within` ou quando o item (ou o pai) tem `data-selecionada`. Substitui o hover genérico em todo o site |
+| `.escolhas` | Grupo: o coração sai da escolha padrão quando outra recebe hover/foco |
+| `.alma` | O coração como elemento (voz do manifesto, etapas do processo, laço) |
+| `[data-fala]`, `[data-fala-letra]` | Fala por variável CSS (`--fala`, `--resto`, `--i`) |
+| `.travessia`, `.montagem`, `.grade-menu`, `.grade-bloco` | Grades de blocos de `criarGrade` (`--grade-colunas`/`--grade-linhas`) |
+| `.ceu-vivo` | O canvas do céu: `fixed`, `z-index: -1`, `height: 100lvh` |
+| `[data-intro]` | Escondido até o `HeroCena` mostrar; rede de segurança por keyframe depois de 3,5s se o JS não rodar (desligada com movimento reduzido) |
+| `.manifesto--palco`, `.manifesto__*` | Palco do manifesto fixado, só em `@media screen` |
+| `.etapa__*`, `[data-salvo]` | Pontos de salvamento do processo |
+| `.deslize` | Carrossel nativo com `scroll-snap`, só abaixo de 768px. Dentro de grade, o item precisa de `min-w-0` |
+| `.caixa-dialogo` | Caixa de diálogo da Chamada |
+| `.marca-viva` e filhas | A marca viva do cabeçalho |
 | `.trilha`, `.trilha--fim` | Linha vertical com nó que atravessa a página (≥1280px) |
-| `.bloco`, `.bloco--vivo` | Card com borda; variante com hover |
-| `.btn--*` | Variantes e estados de botão |
-| `.estado` | Rótulo curto de estado real (placar, "Em obra", 404) — não usar como etiqueta decorativa |
-| `.campo` | Campo de formulário, com estado `aria-invalid` |
-| `.aura` | Brilho radial parado, parametrizado por `--aura-*` (a do hero é conduzida pela rolagem) |
-| `.estrela`, `.cadente`, `.cometa` | O céu. A camada não deriva mais em loop; onde anda, é a rolagem que move |
-| `.manifesto--palco`, `.manifesto__*` | Layout do manifesto fixado, só em `@media screen` |
-| `.deslize` | Carrossel horizontal nativo com `scroll-snap`, só abaixo de 768px (entregas de Soluções, "Também em obra"). Dentro de grade, o item pai precisa de `min-w-0` |
-| `.marca-viva` e filhas | A marca viva |
-| `.meteoro`, `.letra-meteoro`, `.letreiro-relevo`, `.marca-varredura` | Entrada do nome e do slogan |
-| `.entrar` | Entrada do hero, por tempo |
-| `[data-surgir]` | Revelação por rolagem, `animation-timeline: view()` |
-| `.ciclo-volta` | O laço do processo, revelado por `clip-path` na rolagem |
-| `.previa-slide`, `.obra-*` | Rodízio de fotos e recados de obra |
-| `.pular-conteudo` | Link de pular para o conteúdo |
+| `.btn--*`, `.campo`, `.campo-grupo`, `.estado` | Botões, campos (com `aria-invalid`), rótulo curto de estado real |
 
-**Movimento reduzido**: uma regra global zera duração e atraso de toda animação e transição. Qualquer animação nova já fica coberta — e o que se vê com movimento reduzido é o estado final.
+**Keyframes que sobraram**: `marca-respira-esq/-dir`, `marca-nucleo-pulsa`, `marca-traco-pisca` (`.marca-viva`), `previa-troca` (rodízio de fotos), `obra-barra` e `obra-recado` (prévia em obra), `rede-de-seguranca` (`[data-intro]`), `desenhar-volta` (`.ciclo-volta`, em `@supports (animation-timeline: view())`), `resposta-abre` (FAQ).
 
-**Impressão**: a linha do tempo de rolagem nunca anda no papel. O bloco `@media print` força `[data-surgir]`, `.entrar`, `.meteoro`, `.letra-meteoro` e `.ciclo-volta` visíveis, tira o `clip-path` do laço, esconde céu, auras e varredura, e deixa só a primeira foto do rodízio.
+**Movimento reduzido**: a regra global zera duração e atraso de toda animação e transição; os componentes do GSAP não criam nada fora de `COM_MOVIMENTO`; o céu desenha parado e o Lenis não liga. O que se vê é o estado final.
+
+**Impressão**: `@media print` força entrada, letras, coração, blocos e `.ciclo-volta` no estado final, reseta `--fala`/`--resto` para mostrar tudo e esconde `.ceu-vivo`, as grades e os corações de cursor.
 
 ## Segurança e infraestrutura
 
-`next.config.ts` exporta uma função da **fase** do Next (`PHASE_DEVELOPMENT_SERVER`), não um objeto que lê `NODE_ENV` — uma versão antiga assim vazou `'unsafe-eval'` para produção.
+`next.config.ts` exporta uma função da **fase** do Next (`PHASE_DEVELOPMENT_SERVER`), não um objeto que lê `NODE_ENV`: uma versão antiga assim vazou `'unsafe-eval'` para produção.
 
 | Diretiva | Valor | O que isso impõe ao código |
 |---|---|---|
-| `script-src` | `'self' 'unsafe-inline'` (+ `'unsafe-eval'` e Vercel só em dev) | Scripts em linha permitidos sem nonce (nonce exigiria middleware e mataria o estático). Os dois scripts próprios — recado do console e JSON-LD — escapam `<` |
+| `script-src` | `'self' 'unsafe-inline'` (+ `'unsafe-eval'` e Vercel só em dev) | Scripts em linha permitidos sem nonce (nonce exigiria middleware e mataria o estático). Os dois scripts próprios, recado do console e JSON-LD, escapam `<`. GSAP e Lenis vêm do bundle, nunca de CDN |
 | `style-src` | `'self' 'unsafe-inline'` | Estilo em linha liberado (variáveis CSS via `style`) |
 | `img-src` | `'self' data: https://yasmin-g-studio.vercel.app` | Imagem externa só dessa origem; o resto vai para `public/` |
 | `font-src` | `'self'` | Fonte tem que ser auto-hospedada |
@@ -319,16 +390,18 @@ sequenceDiagram
 | `form-action`, `base-uri` | `'self'` | — |
 | `object-src`, `frame-ancestors` | `'none'` | O site não pode ser embutido |
 
-Outros headers: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` restritiva, `Strict-Transport-Security: max-age=63072000; includeSubDomains` — **sem `preload`**, de propósito (entrar na lista é praticamente irreversível).
+Outros headers: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` restritiva, `Strict-Transport-Security: max-age=63072000; includeSubDomains`, **sem `preload`**, de propósito (entrar na lista é praticamente irreversível).
 
-Redirects temporários (307, não 308, para o navegador não cachear uma decisão ainda em ajuste): `/sobre`, `/servicos`, `/solucoes`, `/projetos`, `/como-funciona`, `/processo`, `/contato` → âncoras da home.
+Redirects temporários (307, para o navegador não cachear uma decisão ainda em ajuste): `/sobre`, `/servicos`, `/solucoes`, `/projetos`, `/como-funciona`, `/processo`, `/contato` → âncoras da home.
+
+Deploy: repositório `SamuelcCouto/detera-premium`, publicado pela Vercel a cada push em `main` (https://detera-premium-ten.vercel.app). É um projeto separado da DETERA oficial (`C:\ProjetosCloudSpyre\detera`, detera.com.br).
 
 ## Variáveis de ambiente
 
 | Variável | Lida em | Sem ela |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `config/site.ts` | `isPublicDomain = false` → `noindex` em `layout.tsx` e `disallow: /` em `robots.ts`. **O site não é indexado** |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `config/site.ts` | Cai em `5562984750989`, fixo no código |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `config/site.ts` | Cai no número fixo no código |
 | `VERCEL_PROJECT_PRODUCTION_URL` | `config/site.ts` | Injetada pela Vercel; senão `http://localhost:3000` |
 
 Toda leitura passa por `env()`, que trata string vazia como ausente.
@@ -338,57 +411,66 @@ Toda leitura passa por `env()`, que trata string vazia como ausente.
 | Componente | Por quê |
 |---|---|
 | `app/error.tsx`, `app/global-error.tsx` | Error boundary do Next tem que ser client |
-| `layout/header.tsx` | Menu mobile: estado, trava de rolagem, Escape |
-| `ui/botao-nucleo.tsx` | Posição do ponteiro em variáveis CSS |
+| `layout/header.tsx` | Estado sólido, menu mobile, trava de rolagem, `inert`, Esc, grade do menu |
 | `sections/nave.tsx` | Canvas, `requestAnimationFrame`, teclado, `ResizeObserver` |
-| `sections/case-preview.tsx` | Fallback quando a imagem ou o iframe falha; a tela abre do centro na rolagem |
-| `components/motion/*` | Lenis e as coreografias do GSAP |
+| `sections/case-preview.tsx` | Fallback de imagem/iframe e montagem em blocos |
+| `components/motion/*` | Céu em canvas, Lenis e as coreografias do GSAP |
 | `features/contato/form.tsx` | Validação e `window.open` |
 
-Todo o resto — a marca, o céu, as seções, os botões — é renderizado no servidor, sem JavaScript no cliente.
+Todo o resto (a marca, as seções, os botões, os ícones) é renderizado no servidor.
 
 ## Convenções
 
-- **Português em tudo**: identificadores, props, campos de conteúdo e comentários (`Simbolo`, `criarGerador`, `entregas`, `acento`). Só os primitivos de UI ficam em inglês (`Button`, `Container`, `Section`).
+- **Português em tudo**: identificadores, props, campos de conteúdo e comentários (`Simbolo`, `criarGrade`, `falar`, `entregas`). Só os primitivos de UI ficam em inglês (`Button`, `Container`, `Section`).
 - **Comentário explica a alternativa rejeitada**: o padrão dominante é "antes era X, deu Y, por isso Z". Leia o comentário antes de "simplificar" algo que parece estranho.
 - **Texto fora do componente**: cada seção é um renderizador fino sobre um arquivo de `src/content/`.
-- **Aleatoriedade determinística**: nunca `Math.random()` no que roda no servidor. `estrelas.tsx` usa xorshift com semente por seção. (`nave.tsx` pode usar `Math.random()` — roda só no cliente, depois do clique.)
-- **React → CSS por variável**: parâmetros de animação entram via `style={{ "--x": … }}` e a classe no CSS consome.
+- **Aleatoriedade determinística**: nunca `Math.random()` no que roda no servidor. Céu e grades usam `criarGerador`/`ordemSorteada` com semente (`nave.tsx` pode usar `Math.random()`: roda só no cliente, depois do clique).
+- **Movimento por `data-*`**, estilo por classe. O CSS pode mudar sem quebrar a coreografia.
+- **Gestos da marca, não do catálogo**: sem blur, neon, cortina do centro, surgir-e-subir genérico, mola/elástico, gradiente ou vidro. Degraus (`steps`) para o que é pixel. Detalhes em [design-plan.md](design-plan.md).
+- **Uma animação por elemento**: entrada por dentro, rolagem por fora (`data-letra-entra` dentro de `data-letra-desfaz`, `data-coracao-entra` dentro de `data-hero-coracao`).
 - **HTML nativo antes de widget**: `<details>` no FAQ e na história do case, `<dl>` nas notas, `<ol>` só onde a ordem importa.
-- **Acessibilidade**: `aria-hidden` em toda decoração; `sr-only` para o texto que cai letra a letra; `role="img" aria-label` no nome desenhado; `role="status" aria-live="polite"` no formulário; foco visível global.
+- **Acessibilidade**: `aria-hidden` em toda decoração; `sr-only` para o texto falado; `role="img" aria-label` no nome desenhado; `role="status" aria-live="polite"` no formulário; foco visível global; o cursor-coração também segue o foco do teclado.
 - **Número só se for medido**: nenhum cliente, métrica ou certificação inventados. O único número dos cases é o PageSpeed, com o link do relatório.
 
 ## Armadilhas
 
-1. **Oxanium não vai por `next/font`.** O carregador do Turbopack não resolve os arquivos dela neste ambiente; o `@font-face` em `globals.css` é o contorno.
-2. **"DETERA" com A latino (U+0041)**, nunca o cirílico А (U+0410). Os dois são idênticos na tela; o cirílico quebra busca, leitor de tela e copiar/colar. Já aconteceu.
-3. **Sem `NEXT_PUBLIC_SITE_URL` o site sai com `noindex`.** É intencional para URLs de preview — e é a primeira coisa a checar se o Google não indexar.
-4. **`.aura` só se posiciona com `top/left/right/bottom`.** A keyframe `aura-deriva` é dona do `transform`; um utilitário de transform do Tailwind é sobrescrito sem aviso.
-5. **Colisão do jogo**: a folga vertical inclui metade do deslocamento do tiro por quadro. Tirar isso faz o tiro atravessar rocha pequena entre um quadro e outro.
-6. **Animação por rolagem não tem fallback em JS.** Sem suporte a `view()`, o conteúdo aparece inteiro (correto). Na impressão, o bloco `@media print` é que impede a página de sair em branco — elemento novo com `view()` precisa entrar lá.
-7. **`QUEDA` em `hero.tsx` e a duração de `meteoro-cai` no CSS andam juntas.** Mudou uma, muda a outra, senão o slogan e a luz saem de sincronia com o nome.
-8. **O viewBox do `Letreiro` muda com `animado`**: `0 0 716 202` no hero (com espaço para o símbolo sob o "A"), `0 0 716 128` no rodapé. A altura do hero foi multiplicada por 202/128 para as letras não encolherem.
-9. **Imagem externa e iframe exigem CSP.** Prévia nova hotlinkada precisa entrar em `img-src`; iframe novo, em `frame-src` e com `sandbox=""`.
-10. **Âncora antiga depende de `alias`**: `#servicos` e `#como-funciona` funcionam pelo `alias` de `Section`, e `/servicos` etc. pelos redirects. Renomear o `id` de uma seção sem conferir os dois quebra link salvo.
-11. **As notas do PageSpeed têm data.** Quando o site do cliente mudar, mede de novo e troca data, notas e link juntos. Não se sabe por quanto tempo o Google mantém o link do relatório.
-12. **O preview oculto do Claude não roda `requestAnimationFrame`** e devolve quadro em branco depois de `scrollTo` programático — o jogo e as animações por rolagem precisam ser vistos em navegador real ou em captura do Chrome headless.
-13. **Lenis já desconta o `scroll-padding-top`.** Passar `offset` com a altura do cabeçalho em `scrollTo` conta duas vezes (a seção para 72px abaixo do cabeçalho). E nada de `scroll-behavior: smooth` no CSS: brigaria com o Lenis.
-14. **`view()` não anda dentro de trecho fixado** — o elemento fica `fixed` e a timeline congela. Nada dentro do hero ou do manifesto usa `data-surgir`; lá quem manda é o GSAP.
-15. **Uma animação por elemento.** O que entra ao carregar (`.meteoro`, `.letra-meteoro`, `.entrar`) tem invólucro próprio para a rolagem (`data-letra-desfaz`, `data-hero-resto`). Juntos, a rolagem grava o quadro do meio da entrada e o elemento some ao voltar ao topo.
-16. **O cabeçalho é `fixed`.** Seção nova no topo precisa descontar 4.5rem; o vidro fosco é ligado por `IntersectionObserver` no marco `data-fim-do-hero`, não por ScrollTrigger (o cabeçalho vem antes do pin na página).
-17. **Carrossel dentro de grade estoura a página.** Item de grade tem `min-width: auto` e não encolhe abaixo do conteúdo — e o conteúdo de um `.deslize` é a faixa inteira. Sem `min-w-0` (e colunas em `minmax(0, …)`), a página fica mais larga que a tela no celular: o cabeçalho fixo perde o botão e o coração do hero mira um "centro" fora dela.
+1. **Oxanium não vai por `next/font`.** O carregador do Turbopack não resolve os arquivos dela aqui; o `@font-face` em `globals.css` é o contorno.
+2. **"DETERA" com A latino (U+0041)**, nunca o cirílico А (U+0410). Os dois são idênticos na tela; o cirílico quebra busca, leitor de tela e copiar/colar.
+3. **Sem `NEXT_PUBLIC_SITE_URL` o site sai com `noindex`.** Intencional para URLs de preview, e a primeira coisa a checar se o Google não indexar.
+4. **O pin do hero depende da altura com a fonte certa.** `hero-cena.tsx` espera a Oxanium (no máximo 1,5s) antes de decidir o pin e roda `ScrollTrigger.sort()` + `refresh()`. A folga de 24px e o espaçamento apertado existem para 1280×720 fixar; aumentar o respiro do hero pode desligar o pin em notebook.
+5. **`smoothOrigin` do GSAP desloca o núcleo.** Em `montarCoracao`, `transformOrigin` vai no `from` e no `to`. Tirar do `from` faz o núcleo nascer fora do centro.
+6. **Emenda entre faixas do coração.** Os retângulos de recorte sobrepõem 0,1 unidade; com menos, aparece um fio quando o coração cresce na travessia.
+7. **`tl.set` no tempo 0 aplica na hora.** Por isso `apagar` começa em 0,005 e a fala usa variável CSS; do contrário a última letra do slogan some antes da rolagem.
+8. **Lenis já desconta o `scroll-padding-top`.** Passar `offset` em `scrollTo` conta duas vezes. E nada de `scroll-behavior: smooth` no CSS: brigaria com o Lenis.
+9. **Âncora para seção fixada mira o `.pin-spacer`**, senão para no meio do trecho fixado.
+10. **O cabeçalho é `fixed` e vem antes do pin.** O estado sólido usa `IntersectionObserver` com margem gigante acima, para um salto de âncora que atravessa o marco entre dois quadros não deixar o cabeçalho transparente.
+11. **Carrossel dentro de grade estoura a página.** Sem `min-w-0` e colunas em `minmax(0, …)`, o `.deslize` alarga a página no celular.
+12. **O `Contador` começa em `top bottom`.** Mais tarde que isso, a nota aparece "0" na borda da tela.
+13. **`view()` não anda dentro de trecho fixado.** Nada dentro do hero ou do manifesto usa animação por `view()`; lá quem manda é o GSAP. Animação nova com `view()` vai em `@supports` e entra no bloco `@media print`.
+14. **Grades criadas por `criarGrade` não são React.** Sempre chame `remover()` no cleanup do `useGSAP`, senão blocos duplicam ao remontar.
+15. **Performance do céu**: animar estrela por DOM foi a causa do travamento da v1 (271 animações infinitas). Estrela nova vai no canvas, não em CSS; e nada de `backdrop-filter`, blur ou grão fixo.
+16. **Viewbox do `Letreiro` muda com `animado`** (`202` no hero, `128` no rodapé). Mudou a geometria, confira os dois e o manual.
+17. **Imagem externa e iframe exigem CSP.** Prévia nova hotlinkada precisa entrar em `img-src`; iframe novo, em `frame-src` e com `sandbox=""`.
+18. **Âncora antiga depende de `alias`**: `#servicos` e `#como-funciona` funcionam pelo `alias` de `Section`, e `/servicos` etc. pelos redirects.
+19. **As notas do PageSpeed têm data.** Quando o site do cliente mudar, meça de novo e troque data, notas e link juntos.
+20. **O preview oculto do Claude não roda `requestAnimationFrame`.** Céu, jogo e animações de rolagem precisam ser vistos em navegador real ou em captura do Chrome headless.
+21. **`gerar-logo.mjs` lê `marca-paths.ts` por regex** e exige 6 letras e 4 traços; mudar a forma de declarar as constantes quebra o gerador. O sumário do PDF tem números de página fixos em `gerar-manual.mjs`.
 
 ## Guia de navegação
 
 - **Mudar o texto de uma seção** → `src/content/<secao>.ts`. O componente quase nunca precisa mudar.
 - **Mudar identidade, slogan, e-mail, WhatsApp, fundador** → `src/config/site.ts` (o número também aceita `NEXT_PUBLIC_WHATSAPP_NUMBER`).
-- **Adicionar uma seção** → componente em `src/components/sections/`, conteúdo em `src/content/`, entrada em `src/app/page.tsx` na posição do argumento, `navLinks` em `src/config/nav.ts` se for para o menu. Escolha o degrau do título pelo peso do que a seção diz e uma `semente` nova para o `<Estrelas>`.
+- **Adicionar uma seção** → componente em `src/components/sections/`, conteúdo em `src/content/`, entrada em `src/app/page.tsx` na posição do argumento, `ceu` no `Section` conforme o peso do momento, `navLinks` em `src/config/nav.ts` se for para o menu.
+- **Fazer um texto ser "falado"** → `TextoFala` na seção e `falar(tl, bloco, …)` de `@/lib/fala` no invólucro de movimento.
+- **Montar o coração em outro lugar** → `Simbolo montavel="<id-único>"` e `montarCoracao(tl, raiz, …)`.
+- **Efeito de blocos** → `criarGrade` de `@/lib/grade` com uma semente fixa, classe em `globals.css`, `remover()` no cleanup.
+- **Marcar escolha com o cursor-coração** → classe `.escolha` (ou `.alma-marca` para rótulo) e, para seleção vinda de rolagem, `data-selecionada` no item.
 - **Adicionar um case** → `src/content/cases.ts` + foto em `public/cases/`. Meça no PageSpeed (perfil celular, primeira execução) e preencha `medicao` com o link permanente.
-- **Promover projeto "em obra" a case** → mover de `em-construcao.ts` para `cases.ts`; se ele deixar de ser hotlink/iframe, limpar a origem correspondente na CSP em `next.config.ts`.
-- **Mudar a marca** → `src/components/brand/marca-paths.ts`, e conferir `wordmark.tsx`, `src/app/icon.tsx` e `src/app/opengraph-image.tsx`.
-- **Mudar cor, fonte, escala, raio** → bloco `@theme` em `src/app/globals.css`.
-- **Animação conduzida pela rolagem** → componente em `src/components/motion/`, importando de `@/lib/motion`, dentro de `useGSAP` com `gsap.matchMedia(COM_MOVIMENTO)`. Só `transform`, `opacity`, `filter` e `clip-path`. Conferir com `prints.mjs` da skill `site-premium` no build de produção (o preview oculto não roda rAF).
-- **Criar uma animação em loop** → keyframe e classe em `globals.css`. Movimento reduzido já é global; se usar `view()`, envolva em `@supports` e adicione ao bloco `@media print`.
+- **Promover projeto "em obra" a case** → mover de `em-construcao.ts` para `cases.ts`; se deixar de ser hotlink/iframe, limpar a origem na CSP em `next.config.ts`.
+- **Mudar a marca** → `src/components/brand/marca-paths.ts`; conferir `coracao.tsx`, `wordmark.tsx`, `icon.tsx`, `opengraph-image.tsx` e rodar os geradores de `docs/identidade/fonte`.
+- **Mudar cor, fonte, escala, raio** → bloco `@theme` em `src/app/globals.css`; recalcular o contraste em `design-plan.md` e atualizar `docs/identidade/fonte/conteudo.mjs`.
+- **Animação conduzida pela rolagem** → componente em `src/components/motion/`, importando de `@/lib/motion`, dentro de `useGSAP` com `gsap.matchMedia(COM_MOVIMENTO)`. Só `transform`, `opacity` e `clip-path`. Conferir no build de produção com captura do Chrome headless.
 - **Mudar CSP ou headers** → `next.config.ts`, sempre pelo parâmetro `phase`.
 - **Mudar o formulário** → `src/features/contato/schema.ts` (campos, limites, mensagem) e `form.tsx` (UI). Não há servidor; se um dia houver e-mail transacional, o lugar é `src/app/api/`.
 - **Mexer em SEO** → `metadata` em `src/app/layout.tsx`, dados estruturados em `src/lib/seo/json-ld.tsx`, indexação por `NEXT_PUBLIC_SITE_URL`.
+- **Atualizar o manual da marca** → texto em `docs/identidade/fonte/conteudo.mjs`, depois a sequência do `docs/identidade/README.md`.

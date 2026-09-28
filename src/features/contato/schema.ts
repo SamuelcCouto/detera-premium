@@ -5,7 +5,7 @@ export const tiposDeProjeto = [
   "Crescimento (busca, anúncios e conversão)",
   "Tecnologia e automação (sistema ou integração)",
   "Manutenção de um site que já existe",
-  "Ainda não sei — quero conversar",
+  "Ainda não sei, quero conversar",
 ] as const;
 
 /**
@@ -32,8 +32,8 @@ export const contatoSchema = z.object({
   mensagem: z
     .string()
     .trim()
-    .min(10, "Conte um pouco mais — dez caracteres não dão para entender o projeto.")
-    .max(2000, "Mensagem muito longa. Resuma o essencial — o resto a gente conversa."),
+    .min(10, "Conte um pouco mais: dez caracteres não dão para entender o projeto.")
+    .max(2000, "Mensagem muito longa. Resuma o essencial e o resto a gente conversa."),
 });
 
 export type DadosContato = z.infer<typeof contatoSchema>;

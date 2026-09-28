@@ -96,7 +96,7 @@ export function Hero() {
 
         {/* O respiro de cima desconta o cabeçalho, que é fixo e fica por
             cima do hero. */}
-        <Container className="relative flex flex-1 flex-col justify-center pt-[calc(4.5rem+1.5rem)] pb-8">
+        <Container className="relative flex flex-1 flex-col justify-center pt-[calc(4.5rem+1rem)] pb-6">
           <h1 id="hero-titulo">
             {/* O nome desenhado, com o coração em blocos embaixo do "A". No
                 celular ocupa a largura inteira; a partir de 768px a altura
@@ -117,7 +117,7 @@ export function Hero() {
             </span>
           </h1>
 
-          <div data-hero-resto className="mt-7">
+          <div data-hero-resto className="mt-6">
             <p data-intro data-entra className="text-lead text-texto-suave max-w-[56ch]">
               Toda ideia de negócio começa parecida com as outras. O nosso trabalho é
               tecnologia, estratégia e design aplicados até ela virar algo que só a
@@ -125,7 +125,7 @@ export function Hero() {
             </p>
           </div>
 
-          <div data-hero-resto className="mt-8">
+          <div data-hero-resto className="mt-7">
             <div data-intro data-entra className="flex flex-col gap-3 sm:flex-row">
               <ButtonLink href={whatsappUrl(mensagemHero)}>Vamos construir</ButtonLink>
               <ButtonLink href="#solucoes" variant="contorno">
@@ -135,7 +135,7 @@ export function Hero() {
           </div>
         </Container>
 
-        <Container className="relative hidden pb-10 md:block">
+        <Container className="relative hidden pb-8 md:block">
           <div data-hero-resto>
             <div data-intro data-entra>
               <TrilhaDeFrentes />

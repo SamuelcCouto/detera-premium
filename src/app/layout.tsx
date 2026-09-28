@@ -111,6 +111,19 @@ const recadoConsole = ((): string => {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
+      <head>
+        {/* A Oxanium vem por `@font-face` (não por `next/font`, ver
+            `globals.css`), e sem aviso o navegador só a descobre depois de
+            ler o CSS e montar o texto. O hero mede a própria altura com a
+            fonte final para decidir se fixa, e esperava por ela. */}
+        <link
+          rel="preload"
+          href="/fonts/oxanium-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="antialiased">
         <CeuVivo />
         {children}

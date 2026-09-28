@@ -123,10 +123,12 @@ export function HeroCena({ children }: { children: ReactNode }) {
           const { movimento, alto } = contexto.conditions as { movimento: boolean; alto: boolean };
           if (!movimento) return;
 
-          // Fixa só se o hero inteiro couber na tela. A seção tem `min-h-svh`:
-          // quando o conteúdo passa da altura ela cresce, e com pin o que
-          // sobrasse embaixo ficaria escondido e sairia desfeito.
-          const fixar = alto && palco.offsetHeight <= window.innerHeight + 1;
+          // Fixa só se o hero couber na tela. A seção tem `min-h-svh`: quando
+          // o conteúdo passa da altura ela cresce, e com pin o que sobrasse
+          // embaixo ficaria escondido e sairia desfeito. A folga de 24px é
+          // menor que o respiro de baixo da seção: o que passa dela é espaço
+          // vazio, não conteúdo.
+          const fixar = alto && palco.offsetHeight <= window.innerHeight + 24;
 
           const tl = gsap.timeline({
             defaults: { ease: "none" },
@@ -216,7 +218,11 @@ export function HeroCena({ children }: { children: ReactNode }) {
       if (document.fonts.status === "loaded") {
         montarRolagem();
       } else {
-        document.fonts.ready.then(() => {
+        // Espera a fonte por no máximo 1,5 s: em rede lenta, esperar mais
+        // deixava o hero sem trecho fixado justo quando a pessoa começa a
+        // rolar. Passado o prazo, mede com o que tiver.
+        const prazo = new Promise((pronto) => setTimeout(pronto, 1500));
+        Promise.race([document.fonts.ready, prazo]).then(() => {
           if (!vivo) return;
           montarRolagem();
           ScrollTrigger.sort();

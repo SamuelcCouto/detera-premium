@@ -26,7 +26,7 @@ export const projetosEmConstrucao: ProjetoEmConstrucao[] = [
   {
     id: "yasmin",
     cliente: "Yasmin Guimarães Studio",
-    setor: "Massoterapia e estética corporal · Goiânia",
+    setor: "Massoterapia e estética corporal em Goiânia",
     resumo:
       "Massagem relaxante, drenagem linfática, modeladora e protocolos personalizados, com atendimento individual e hora marcada.",
     url: "https://yasmin-g-studio.vercel.app",

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+import { CeuVivo } from "@/components/motion/ceu-vivo";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { isPublicDomain, site } from "@/config/site";
 import "./globals.css";
@@ -111,6 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <body className="antialiased">
+        <CeuVivo />
         {children}
         <SmoothScroll />
         <script dangerouslySetInnerHTML={{ __html: recadoConsole }} />

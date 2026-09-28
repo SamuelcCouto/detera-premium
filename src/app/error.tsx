@@ -42,8 +42,8 @@ export default function Erro({
         <h1 className="text-display mt-4 max-w-[16ch]">Alguma coisa quebrou aqui</h1>
 
         <p className="text-lead text-texto-suave mt-5 max-w-[46ch]">
-          O erro foi registrado do nosso lado. Você pode tentar de novo agora —
-          e, se insistir, é só falar com a gente.
+          O erro foi registrado do nosso lado. Você pode tentar de novo agora e,
+          se ele continuar, falar com a gente.
         </p>
 
         {error.digest ? (

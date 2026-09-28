@@ -67,23 +67,23 @@ export const pilares: Pilar[] = [
     nome: "Crescimento",
     promessa: "Atenção que não vira oportunidade é só custo.",
     descricao:
-      "Presença resolve ser encontrado por quem já procura. Crescimento é ir atrás de quem ainda não procurou — e conseguir provar se valeu.",
+      "Presença resolve ser encontrado por quem já procura. Crescimento é ir atrás de quem ainda não procurou, e conseguir provar se valeu.",
     acento: "determinacao",
     entregas: [
       {
         nome: "Anúncios no Google e no Meta",
         texto:
-          "Campanha ligada a uma página feita para ela, e não ao site inteiro. Quem clica cai exatamente no assunto do anúncio.",
+          "Cada campanha leva a uma página feita para ela. Quem clica cai exatamente no assunto do anúncio.",
       },
       {
         nome: "Medição e analytics",
         texto:
-          "Saber de onde veio cada contato. Sem isso, aumentar verba é aposta — e cortar também.",
+          "Saber de onde veio cada contato. Sem isso, aumentar verba é aposta, e cortar também.",
       },
       {
         nome: "Funil e remarketing",
         texto:
-          "Quem visitou e não falou com você ainda pode voltar. O caminho de volta é construído, não esperado.",
+          "Quem visitou e não falou com você ainda pode voltar. O caminho de volta é construído de propósito.",
       },
       {
         nome: "SEO de conteúdo",
@@ -93,7 +93,7 @@ export const pilares: Pilar[] = [
       {
         nome: "Otimização contínua",
         texto:
-          "Ajustar título, oferta e ordem da página com base no que os números mostram, e não no que a gente acha bonito.",
+          "Ajustar título, oferta e ordem da página com base no que os números mostram.",
       },
     ],
     ctaTexto: "Falar sobre aquisição de clientes",
@@ -103,7 +103,7 @@ export const pilares: Pilar[] = [
   {
     id: "tecnologia",
     nome: "Tecnologia",
-    promessa: "Tecnologia tira trabalho da frente. Não acrescenta.",
+    promessa: "Tecnologia serve para tirar trabalho da frente.",
     descricao:
       "Quando a planilha compartilhada vira o sistema oficial da empresa, o gargalo deixa de ser vender e passa a ser controlar. Aqui a gente constrói a ferramenta que faltava.",
     acento: "determinacao",
@@ -126,7 +126,7 @@ export const pilares: Pilar[] = [
       {
         nome: "APIs e conexões",
         texto:
-          "Ligar o site ao ERP, ao CRM ou ao meio de pagamento — para o dado nascer uma vez só e valer em todo lugar.",
+          "Ligar o site ao ERP, ao CRM ou ao meio de pagamento, para o dado nascer uma vez só e valer em todo lugar.",
       },
       {
         nome: "Ferramenta interna",
@@ -154,7 +154,7 @@ export const pilares: Pilar[] = [
       {
         nome: "Performance",
         texto:
-          "Página que abre rápido em rede móvel. Velocidade não é vaidade técnica: é a diferença entre a pessoa esperar e a pessoa voltar para a busca.",
+          "Página que abre rápido em rede móvel. É a velocidade que decide se a pessoa espera ou volta para a busca.",
       },
       {
         nome: "Segurança",
@@ -164,7 +164,7 @@ export const pilares: Pilar[] = [
       {
         nome: "Monitoramento e continuidade",
         texto:
-          "Backup, alerta e plano de retorno. A pergunta nunca foi se algo vai falhar, e sim quanto tempo leva para voltar.",
+          "Backup, alerta e plano de retorno. Um dia algo falha; o que importa é quanto tempo leva para voltar.",
       },
       {
         nome: "Escala",
@@ -174,7 +174,7 @@ export const pilares: Pilar[] = [
       {
         nome: "Evolução",
         texto:
-          "O sistema acompanha o negócio: serviço novo, preço novo, página nova — sem recomeçar do zero a cada mudança.",
+          "O sistema acompanha o negócio: serviço novo, preço novo, página nova, sem recomeçar do zero a cada mudança.",
       },
     ],
     ctaTexto: "Falar sobre infraestrutura",

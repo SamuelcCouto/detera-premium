@@ -10,17 +10,17 @@ export const transformacoes = [
   {
     generico: "Um site institucional.",
     especifico:
-      "Um site que existe para uma razão específica — e isso aparece na estrutura e no texto, não só numa camada de design por cima de um modelo pronto.",
+      "Um site que existe para uma razão específica, e isso aparece na estrutura e no texto antes de qualquer camada de design.",
   },
   {
     generico: "Uma paleta de cores e uma logo.",
     especifico:
-      "Um jeito de se apresentar que se repete de propósito em cada tela, até virar reconhecível — não um kit de identidade visual entregue uma vez e esquecido.",
+      "Um jeito de se apresentar que se repete de propósito em cada tela, até virar reconhecível, e que continua em uso depois da entrega.",
   },
   {
     generico: "Um sistema que automatiza uma tarefa.",
     especifico:
-      "Um sistema desenhado a partir de como aquele time específico já trabalha, para a ferramenta caber na operação — em vez da operação se adaptar à ferramenta.",
+      "Um sistema desenhado a partir de como aquele time já trabalha, para a ferramenta caber na operação sem obrigar a operação a mudar por causa dela.",
   },
   {
     generico: "Uma campanha de anúncios.",

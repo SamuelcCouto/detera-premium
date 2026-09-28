@@ -23,7 +23,9 @@ const redes = [
 
 export function Footer() {
   return (
-    <footer className="bg-vazio border-borda relative border-t">
+    // Transparente sobre o céu (`CeuVivo`), com a densidade mais baixa da
+    // página: o fim do site é quieto.
+    <footer data-ceu={0.25} className="border-borda relative border-t">
       {/* Último trecho da trilha: some por fade em vez de bater num terminal. */}
       <span aria-hidden="true" className="trilha trilha--fim" />
 
@@ -47,10 +49,7 @@ export function Footer() {
             <ul className="mt-4 flex flex-col gap-2.5 text-[0.92rem]">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    className="text-texto-suave hover:text-texto transition-colors"
-                  >
+                  <a href={link.href} className="escolha text-texto-suave">
                     {link.label}
                   </a>
                 </li>
@@ -68,7 +67,7 @@ export function Footer() {
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-texto-suave hover:text-texto transition-colors"
+                  className="escolha text-texto-suave"
                 >
                   {site.contact.phone}
                 </a>
@@ -76,7 +75,7 @@ export function Footer() {
               <li>
                 <a
                   href={`mailto:${site.contact.email}`}
-                  className="text-texto-suave hover:text-texto break-all transition-colors"
+                  className="escolha text-texto-suave break-all"
                 >
                   {site.contact.email}
                 </a>
@@ -91,9 +90,9 @@ export function Footer() {
                     target={href.startsWith("http") ? "_blank" : undefined}
                     rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
                     aria-label={rotulo}
-                    className="border-borda text-texto-suave hover:border-determinacao hover:text-determinacao flex h-10 w-10 items-center justify-center rounded-[2px] border transition-colors"
+                    className="border-borda text-texto-suave hover:text-texto flex h-10 w-10 items-center justify-center rounded-[2px] border"
                   >
-                    <Icone className="h-[18px] w-[18px]" />
+                    <Icone className="h-5 w-5" />
                   </a>
                 </li>
               ))}
@@ -103,20 +102,21 @@ export function Footer() {
 
         <div className="border-borda mt-14 flex flex-col gap-4 border-t pt-6 text-[0.85rem] md:flex-row md:items-center md:justify-between">
           <p className="text-texto-fraco">
-            © {new Date().getFullYear()} {site.legalName} · Fundada por{" "}
+            © {new Date().getFullYear()} {site.legalName}. Fundada por{" "}
             <a
               href={site.founderPortfolio}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-texto-suave hover:text-texto underline underline-offset-4 transition-colors"
+              className="text-texto-suave hover:text-texto underline underline-offset-4"
             >
               {site.founder}
             </a>
+            .
           </p>
 
-          <p className="estado">
+          <p className="text-texto-fraco inline-flex items-center gap-2">
             <span aria-hidden="true" className="bg-determinacao h-[6px] w-[6px] rotate-45" />
-            {site.local.city} · {site.local.state}
+            {site.local.city}, {site.local.state}
           </p>
         </div>
       </Container>

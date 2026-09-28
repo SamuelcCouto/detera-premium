@@ -29,7 +29,7 @@ export function FormularioContato() {
         encontrados[campo] ??= problema.message;
       }
       setErros(encontrados);
-      setAviso("Faltou preencher alguma coisa — veja os campos marcados.");
+      setAviso("Faltou preencher alguma coisa. Veja os campos marcados.");
       return;
     }
 
@@ -62,8 +62,8 @@ export function FormularioContato() {
         autoComplete="email"
       />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="campo-tipo" className="text-texto-suave text-[0.9rem]">
+      <div className="campo-grupo flex flex-col gap-2">
+        <label htmlFor="campo-tipo" className="alma-marca text-texto-suave text-[0.9rem]">
           Sobre o que você quer falar
         </label>
         <select
@@ -80,8 +80,8 @@ export function FormularioContato() {
         </select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="campo-mensagem" className="text-texto-suave text-[0.9rem]">
+      <div className="campo-grupo flex flex-col gap-2">
+        <label htmlFor="campo-mensagem" className="alma-marca text-texto-suave text-[0.9rem]">
           O que você quer construir
         </label>
         <textarea
@@ -130,8 +130,8 @@ function Campo({
 }) {
   const id = `campo-${nome}`;
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-texto-suave text-[0.9rem]">
+    <div className="campo-grupo flex flex-col gap-2">
+      <label htmlFor={id} className="alma-marca text-texto-suave text-[0.9rem]">
         {rotulo}
       </label>
       <input

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { Contador } from "@/components/motion/contador";
 import { PreviaCase } from "@/components/sections/case-preview";
-import { Estrelas } from "@/components/sections/estrelas";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { IconeLinkExterno } from "@/components/ui/icones";
@@ -74,7 +73,7 @@ function NotasMedidas({ medicao }: { medicao: Medicao }) {
           className="text-texto-suave hover:text-texto decoration-borda-viva inline-flex items-center gap-1 underline underline-offset-4 transition-colors"
         >
           Abrir o relatório
-          <IconeLinkExterno className="h-3.5 w-3.5 shrink-0" />
+          <IconeLinkExterno className="h-[10px] w-[10px] shrink-0" />
         </a>
       </figcaption>
     </figure>
@@ -100,17 +99,7 @@ function Etapa({ rotulo, children }: { rotulo: string; children: ReactNode }) {
 export function Cases() {
   return (
     /* id herdado do site anterior: `#projetos` já circula em links. */
-    <Section id="projetos" tone="camada" aria-labelledby="cases-titulo">
-      {/* Céu discreto: os dois cases trazem imagem real e cheia de cor, e é
-          nelas que o olho deve bater primeiro. */}
-      <Estrelas
-        quantidade={30}
-        cadentes={2}
-        cometas={1}
-        nebulosa="determinacao"
-        className="opacity-50"
-      />
-
+    <Section id="projetos" tone="camada" ceu={0.35} aria-labelledby="cases-titulo">
       <Container className="relative">
         <h2 id="cases-titulo" className="text-subdisplay max-w-[15ch]">
           O que já construímos
@@ -122,7 +111,7 @@ export function Cases() {
 
         <div className="mt-14 grid gap-8 md:grid-cols-2">
           {cases.map((caso) => (
-            <article key={caso.id} data-surgir className="bloco flex flex-col">
+            <article key={caso.id} className="bloco flex flex-col">
               <PreviaCase
                 href={caso.url}
                 dominio={caso.urlRotulo}
@@ -156,7 +145,7 @@ export function Cases() {
                   já vem com semântica de botão para leitor de tela.
                 */}
                 <details className="group/hist border-borda mt-5 border-t pt-4">
-                  <summary className="text-texto hover:text-determinacao-viva flex cursor-pointer list-none items-center gap-2 text-[0.88rem] font-semibold transition-colors [&::-webkit-details-marker]:hidden">
+                  <summary className="escolha text-texto flex cursor-pointer list-none items-center gap-2 text-[0.88rem] font-semibold [&::-webkit-details-marker]:hidden">
                     <span
                       aria-hidden="true"
                       className="text-determinacao transition-transform duration-200 group-open/hist:rotate-90"
@@ -196,7 +185,7 @@ export function Cases() {
                 >
                   Ver o site no ar
                   <span className="text-texto-fraco font-normal">{caso.urlRotulo}</span>
-                  <IconeLinkExterno className="h-4 w-4 shrink-0" />
+                  <IconeLinkExterno className="h-[10px] w-[10px] shrink-0" />
                 </ButtonLink>
               </div>
             </article>
@@ -210,7 +199,7 @@ export function Cases() {
           <div className="border-borda mt-16 border-t pt-12">
             <h3 className="text-heading">Também em obra</h3>
             <p className="text-texto-suave mt-2 max-w-[52ch] text-[0.94rem] leading-relaxed">
-              No ar e em desenvolvimento — ainda sem um ciclo fechado para contar
+              No ar e em desenvolvimento, ainda sem um ciclo fechado para contar
               como case.
             </p>
 
@@ -219,7 +208,7 @@ export function Cases() {
                 ocupavam duas telas depois dos cases principais. */}
             <div className="deslize mt-8 md:grid md:grid-cols-2 md:gap-6">
               {projetosEmConstrucao.map((projeto) => (
-                <article key={projeto.id} data-surgir className="bloco flex flex-col">
+                <article key={projeto.id} className="bloco flex flex-col">
                   <PreviaCase
                     href={projeto.url}
                     dominio={projeto.urlRotulo}

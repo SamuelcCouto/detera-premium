@@ -419,7 +419,7 @@ export function Nave() {
             {perdeu ? "Jogar de novo" : "Clique para jogar"}
           </button>
 
-          <p className="estado text-texto-fraco/70">mouse ou setas · espaço</p>
+          <p className="estado text-texto-fraco/70">mouse ou setas, e espaço para atirar</p>
         </div>
       )}
     </div>

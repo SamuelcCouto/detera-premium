@@ -22,13 +22,23 @@ type SectionProps = {
    * certo depois da renomeação das seções.
    */
   alias?: string;
+  /**
+   * Densidade do céu nesta seção, de 0 a 1 (`CeuVivo`). Cheio onde a marca
+   * fala, quase apagado onde se lê muito.
+   */
+  ceu?: number;
   "aria-labelledby"?: string;
   "aria-label"?: string;
 };
 
+/**
+ * O céu agora é um canvas só, fixo atrás da página (`CeuVivo`). Por isso a
+ * seção "vazio" é transparente — o fundo dela é o próprio céu — e a
+ * "camada" é quase opaca: separa a seção de leitura sem apagar o céu de vez.
+ */
 const tones: Record<Tone, string> = {
-  vazio: "bg-vazio",
-  camada: "bg-camada",
+  vazio: "bg-transparent",
+  camada: "bg-camada/90",
 };
 
 const spaces = {
@@ -46,11 +56,13 @@ export function Section({
   space = "default",
   trilha = true,
   alias,
+  ceu = 0.3,
   ...rest
 }: SectionProps) {
   return (
     <section
       id={id}
+      data-ceu={ceu}
       className={cn("relative", tones[tone], spaces[space], className)}
       {...rest}
     >

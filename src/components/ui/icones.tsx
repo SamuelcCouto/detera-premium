@@ -1,68 +1,123 @@
 import type { SVGProps } from "react";
 
 /**
- * Ícones desenhados no mesmo traço do resto do site: linha de 1,5, ponta reta,
- * nada preenchido. Ficam aqui em vez de virar dependência — são seis formas.
+ * Ícones em pixel, na mesma lógica do coração da marca: cada um é um
+ * punhado de quadrados numa grade de 10 × 10, sem curva e sem traço.
+ *
+ * Antes eram linhas de 1,5 com ponta redonda numa grade de 24, o mesmo
+ * traço dos pacotes de ícone prontos. Em pixel eles pertencem à DETERA e a
+ * mais ninguém.
+ *
+ * Desenhados para 20px (2px de tela por quadrado), com `crispEdges` para os
+ * quadrados não borrarem. Cada ícone é uma lista de `[x, y, largura, altura]`.
  */
-const base = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.5,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-  "aria-hidden": true,
-} satisfies SVGProps<SVGSVGElement>;
+type Blocos = readonly (readonly [number, number, number, number])[];
 
-export function IconeWhatsapp(props: SVGProps<SVGSVGElement>) {
+function IconePixel({ blocos, ...props }: SVGProps<SVGSVGElement> & { blocos: Blocos }) {
   return (
-    <svg {...base} {...props}>
-      <path d="M20.5 11.6a8.4 8.4 0 0 1-12.4 7.4L3.5 20.5l1.6-4.5A8.4 8.4 0 1 1 20.5 11.6Z" />
-      <path d="M8.9 8.4c.3-.6.6-.6.9-.6h.6c.2 0 .5 0 .7.6l.7 1.6c.1.3 0 .5-.1.7l-.5.6c-.2.2-.3.4-.1.7a6.6 6.6 0 0 0 3 2.6c.3.1.5.1.7-.1l.6-.7c.2-.2.4-.2.6-.1l1.6.8c.3.1.4.3.4.5v.7c0 .5-.5 1.1-1.1 1.3-.6.2-1.4.2-3.6-.8a10.4 10.4 0 0 1-4.5-4.5c-.9-1.9-.7-2.8-.5-3.3Z" />
+    <svg
+      viewBox="0 0 10 10"
+      fill="currentColor"
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+      {...props}
+    >
+      {blocos.map(([x, y, w, h]) => (
+        <rect key={`${x}-${y}-${w}-${h}`} x={x} y={y} width={w} height={h} />
+      ))}
     </svg>
   );
+}
+
+/** Balão de conversa com a ponta embaixo, à esquerda. */
+const WHATSAPP: Blocos = [
+  [2, 1, 6, 1],
+  [1, 2, 1, 1],
+  [8, 2, 1, 1],
+  [0, 3, 1, 3],
+  [9, 3, 1, 3],
+  [1, 6, 1, 1],
+  [8, 6, 1, 1],
+  [3, 7, 5, 1],
+  [2, 7, 1, 2],
+  [1, 9, 1, 1],
+  [3, 4, 1, 1],
+  [5, 4, 1, 1],
+  [7, 4, 1, 1],
+];
+
+/** Envelope com a aba em V. */
+const EMAIL: Blocos = [
+  [0, 2, 10, 1],
+  [0, 8, 10, 1],
+  [0, 3, 1, 5],
+  [9, 3, 1, 5],
+  [1, 3, 1, 1],
+  [2, 4, 1, 1],
+  [3, 5, 1, 1],
+  [4, 6, 2, 1],
+  [6, 5, 1, 1],
+  [7, 4, 1, 1],
+  [8, 3, 1, 1],
+];
+
+/** "in" dentro de uma moldura. */
+const LINKEDIN: Blocos = [
+  [0, 0, 10, 1],
+  [0, 9, 10, 1],
+  [0, 1, 1, 8],
+  [9, 1, 1, 8],
+  [2, 2, 1, 1],
+  [2, 4, 1, 4],
+  [4, 4, 1, 4],
+  [5, 4, 2, 1],
+  [7, 5, 1, 3],
+];
+
+/** Os sinais de código, `< >`. */
+const GITHUB: Blocos = [
+  [3, 2, 1, 1],
+  [2, 3, 1, 1],
+  [1, 4, 1, 2],
+  [2, 6, 1, 1],
+  [3, 7, 1, 1],
+  [6, 2, 1, 1],
+  [7, 3, 1, 1],
+  [8, 4, 1, 2],
+  [7, 6, 1, 1],
+  [6, 7, 1, 1],
+];
+
+/** Abre em outra aba: a caixa aberta no canto e a saída na diagonal. */
+const LINK_EXTERNO: Blocos = [
+  [0, 2, 4, 1],
+  [0, 3, 1, 7],
+  [1, 9, 7, 1],
+  [7, 6, 1, 3],
+  [5, 1, 4, 1],
+  [8, 2, 1, 3],
+  [7, 2, 1, 1],
+  [6, 3, 1, 1],
+  [5, 4, 1, 1],
+  [4, 5, 1, 1],
+];
+
+export function IconeWhatsapp(props: SVGProps<SVGSVGElement>) {
+  return <IconePixel blocos={WHATSAPP} {...props} />;
 }
 
 export function IconeEmail(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="1" />
-      <path d="m3 7 9 6 9-6" />
-    </svg>
-  );
+  return <IconePixel blocos={EMAIL} {...props} />;
 }
 
 export function IconeLinkedin(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="1" />
-      <path d="M7.5 10.5V17M7.5 7.2v.1M11.5 17v-3.6a2.1 2.1 0 0 1 4.2 0V17" />
-    </svg>
-  );
+  return <IconePixel blocos={LINKEDIN} {...props} />;
 }
 
 export function IconeGithub(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="m9 18-5-6 5-6M15 6l5 6-5 6" />
-    </svg>
-  );
-}
-
-export function IconeSeta(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M5 12h13M13 6.5 18.5 12 13 17.5" />
-    </svg>
-  );
+  return <IconePixel blocos={GITHUB} {...props} />;
 }
 
 export function IconeLinkExterno(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M13.5 5.5H18.5V10.5" />
-      <path d="M18.5 5.5 11 13" />
-      <path d="M17 14.5v3a1 1 0 0 1-1 1H6.5a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h3" />
-    </svg>
-  );
+  return <IconePixel blocos={LINK_EXTERNO} {...props} />;
 }

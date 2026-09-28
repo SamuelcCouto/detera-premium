@@ -3,8 +3,13 @@
 import { useRef, useState } from "react";
 
 import type { ImagemPrevia } from "@/content/cases";
+import { criarGrade } from "@/lib/grade";
 import { COM_MOVIMENTO, gsap, useGSAP } from "@/lib/motion";
 import { cn } from "@/lib/utils/cn";
+
+/** Semente da ordem dos blocos, tirada do domínio: cada print monta diferente. */
+const sementeDe = (texto: string) =>
+  [...texto].reduce((soma, letra) => (soma * 31 + letra.charCodeAt(0)) | 0, 7);
 
 /** Frases que se revezam na obra. Piada discreta: nunca termina. */
 const recadosDeObra = ["levantando as paredes", "conferindo o prumo", "quase lá"];
@@ -52,37 +57,35 @@ export function PreviaCase({
   const tela = useRef<HTMLDivElement>(null);
 
   /*
-    A tela da moldura "liga" do centro para as bordas enquanto o card entra,
-    e a imagem assenta de um zoom leve — a revelação por `clip-path` da
-    skill, sem trecho fixado: a prova vem logo depois do hero, e um segundo
-    pin seguido do primeiro daria a impressão de que a rolagem travou.
+    O print se monta bloco a bloco enquanto o card entra: uma grade de blocos
+    da cor da tela desligada cobre a imagem, e os blocos apagam um de cada
+    vez, numa ordem sorteada pelo domínio, até a imagem inteira aparecer —
+    como um jogo antigo desenhando a tela. Amarrado à rolagem: voltando, a
+    tela desmonta.
 
-    Duas camadas, de novo: o recorte vai na tela e a escala num invólucro
-    próprio (`data-revelar-midia`). A foto em si já tem dono do `transform`
-    (o zoom do hover) e da `opacity` (o rodízio).
+    Substitui a cortina que abria do centro, que era o gesto de outra marca.
+    A grade é uma camada própria (`data-montagem`), então não disputa nada
+    com o zoom do hover e o rodízio, que são das fotos.
   */
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
       mm.add(COM_MOVIMENTO, () => {
         const el = tela.current!;
-        gsap
-          .timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: { trigger: el, start: "top 92%", end: "top 48%", scrub: true },
-          })
-          .fromTo(
-            el,
-            { clipPath: "inset(0% 50% 0% 50%)" },
-            { clipPath: "inset(0% 0% 0% 0%)", ease: "power2.inOut" },
-            0,
-          )
-          .fromTo(
-            el.querySelector("[data-revelar-midia]"),
-            { scale: 1.25 },
-            { scale: 1, ease: "power2.out" },
-            0,
-          );
+        const cobertura = el.querySelector<HTMLElement>("[data-montagem]")!;
+        const grade = criarGrade(cobertura, {
+          lado: el.clientWidth / 10,
+          semente: sementeDe(dominio),
+          classe: "grade-bloco grade-bloco--tela",
+        });
+        gsap.to(grade.blocos, {
+          opacity: 0,
+          duration: 0.01,
+          ease: "none",
+          stagger: { amount: 1 },
+          scrollTrigger: { trigger: el, start: "top 88%", end: "top 42%", scrub: true },
+        });
+        return () => grade.remover();
       });
     },
     { scope: tela },
@@ -94,22 +97,20 @@ export function PreviaCase({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Abrir ${dominio} em uma nova aba`}
-      className="bloco bloco--vivo group relative block overflow-hidden"
+      className="bloco group relative block overflow-hidden"
     >
-      <div className="border-borda bg-camada-alta relative flex items-center gap-1.5 border-b px-3.5 py-2.5">
-        <span aria-hidden="true" className="border-contorno h-2 w-2 rounded-full border" />
-        <span aria-hidden="true" className="border-contorno h-2 w-2 rounded-full border" />
-        <span aria-hidden="true" className="border-contorno h-2 w-2 rounded-full border" />
-        <span className="text-texto-fraco font-mono ml-2 truncate text-[0.8rem]">
-          {dominio}
+      {/* A faixa com o domínio de verdade. Sem as três bolinhas de janela:
+          elas só enfeitavam, e o endereço é a informação. */}
+      {/* Passando o ponteiro ou o foco no card, o cursor-coração marca o
+          domínio: o card inteiro é a escolha. */}
+      <div className="border-borda bg-camada-alta relative flex items-center gap-1.5 border-b py-2.5 pr-3.5 pl-7">
+        <span className="alma-marca text-texto-fraco min-w-0 text-[0.8rem]">
+          <span className="block truncate">{dominio}</span>
         </span>
 
         {emConstrucao ? (
           <span className="estado text-sistema-viva ml-auto shrink-0 pl-2">
-            <span
-              aria-hidden="true"
-              className="bg-sistema obra-pulso h-[5px] w-[5px] rotate-45"
-            />
+            <span aria-hidden="true" className="bg-sistema h-[5px] w-[5px] rotate-45" />
             Em obra
           </span>
         ) : null}
@@ -120,17 +121,13 @@ export function PreviaCase({
             aria-hidden="true"
             className="bg-borda absolute inset-x-0 -bottom-px h-[2px] overflow-hidden"
           >
-            <span className="bg-sistema obra-barra block h-full w-full origin-left shadow-[0_0_6px_var(--color-sistema)]" />
+            <span className="bg-sistema obra-barra block h-full w-full origin-left" />
           </span>
         ) : null}
       </div>
 
-      <div
-        ref={tela}
-        data-revelar
-        className="bg-camada-alta relative aspect-[16/9] overflow-hidden"
-      >
-        <div data-revelar-midia className="absolute inset-0">
+      <div ref={tela} className="bg-camada-alta relative aspect-[16/9] overflow-hidden">
+        <div className="absolute inset-0">
           {temImagens ? (
             imagens!.map((imagem, indice) => (
               // eslint-disable-next-line @next/next/no-img-element -- o slideshow empilha as fotos e cruza opacidade; `next/image` com `fill` aqui só acrescentaria camadas sem ganho
@@ -146,7 +143,7 @@ export function PreviaCase({
                   animationDuration: `${CICLO}s`,
                 }}
                 className={cn(
-                  "absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]",
+                  "absolute inset-0 h-full w-full object-cover",
                   // A primeira foto é a camada de baixo e nunca some.
                   indice > 0 && "previa-slide",
                 )}
@@ -188,10 +185,13 @@ export function PreviaCase({
             </>
           ) : (
             <span className="text-texto-fraco absolute inset-0 flex items-center justify-center p-6 text-center text-[0.85rem]">
-              Pré-visualização indisponível — clique para ver o site ao vivo
+              Pré-visualização indisponível. Clique para ver o site no ar.
             </span>
           )}
         </div>
+
+        {/* A cobertura que se desmonta em blocos (preenchida pelo cliente). */}
+        <div data-montagem aria-hidden="true" className="montagem" />
 
         {/* Os recados só aparecem na obra, e um de cada vez. */}
         {emConstrucao ? (

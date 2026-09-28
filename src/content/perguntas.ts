@@ -12,7 +12,7 @@ export const perguntas = [
   {
     pergunta: "Em quanto tempo fica pronto?",
     resposta:
-      "O prazo é definido junto com o escopo e entra na proposta com as etapas separadas. O que mais atrasa projeto não é desenvolvimento: é conteúdo — texto, foto e informação que só o cliente tem. Quando isso já existe, o caminho é bem mais curto.",
+      "O prazo é definido junto com o escopo e entra na proposta com as etapas separadas. O que mais atrasa um projeto costuma ser o conteúdo: texto, foto e informação que só o cliente tem. Quando isso já existe, o caminho é bem mais curto.",
   },
   {
     pergunta: "A DETERA atende fora de Goiânia?",
@@ -27,11 +27,11 @@ export const perguntas = [
   {
     pergunta: "O que acontece depois que o site entra no ar?",
     resposta:
-      "Continua existindo alguém responsável. Correção, ajuste, publicação de conteúdo novo e acompanhamento de performance e disponibilidade entram na conversa desde a proposta — não viram um problema descoberto seis meses depois.",
+      "Continua existindo alguém responsável. Correção, ajuste, publicação de conteúdo novo e acompanhamento de performance e disponibilidade entram na conversa desde a proposta, para nenhum deles virar um problema descoberto seis meses depois.",
   },
   {
     pergunta: "Quem vai tocar o meu projeto?",
     resposta:
-      "Hoje a operação da DETERA é conduzida diretamente por Samuel Couto, fundador e responsável técnico, com apoio de parceiros conforme a necessidade de cada projeto. Você fala com quem está construindo, não com um intermediário.",
+      "Hoje a operação da DETERA é conduzida diretamente por Samuel Couto, fundador e responsável técnico, com apoio de parceiros conforme a necessidade de cada projeto. Você fala direto com quem está construindo.",
   },
 ] as const;

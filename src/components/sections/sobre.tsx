@@ -1,4 +1,3 @@
-import { Estrelas } from "@/components/sections/estrelas";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
 import { site } from "@/config/site";
@@ -14,20 +13,11 @@ import { site } from "@/config/site";
  * leitura em vez de passar no primeiro parágrafo e sumir.
  *
  * `sticky` puro, sem JavaScript. Só gruda porque nenhum ancestral tem
- * `overflow: hidden` — o do céu fica no próprio `Estrelas`, que é irmão
- * da coluna, não pai.
+ * `overflow: hidden`.
  */
 export function Sobre() {
   return (
-    <Section id="sobre" tone="camada" aria-labelledby="sobre-titulo">
-      <Estrelas
-        quantidade={40}
-        semente={62029}
-        cadentes={2}
-        cometas={1}
-        nebulosa="determinacao"
-        className="opacity-60"
-      />
+    <Section id="sobre" tone="camada" ceu={0.45} aria-labelledby="sobre-titulo">
 
       <Container className="relative">
         <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-16">
@@ -46,20 +36,21 @@ export function Sobre() {
               A maior parte do mercado escolhe um lado. De um lado, quem faz site
               bonito e não sabe o que acontece com ele depois. Do outro, quem
               entende de servidor e nunca se perguntou se aquela página vende. Os
-              dois entregam metade do problema resolvido — e a conta dessa metade
+              dois entregam metade do problema resolvido, e a conta da outra metade
               sobra para o cliente.
             </p>
             <p className="text-texto-suave mt-5 max-w-[56ch] leading-relaxed">
               A DETERA foi montada para não escolher. Estratégia, conteúdo,
               desenvolvimento, publicação e continuidade são partes do mesmo
-              trabalho, porque na operação do cliente elas são inseparáveis: não
-              adianta o site converter se ele sai do ar, e não adianta estar no ar
-              se ninguém chega nele.
+              trabalho, porque na operação do cliente elas são inseparáveis. Um
+              site que converte precisa estar no ar, e um site no ar precisa de
+              gente chegando nele.
             </p>
             <p className="text-texto-suave mt-5 max-w-[56ch] leading-relaxed">
-              O nome vem de determinação, e não é enfeite: é o critério de
-              entrega. Um projeto só está bom quando aguenta a próxima mudança do
-              negócio sem precisar recomeçar.
+              O nome vem de DETERMINAÇÃO, a força que mantém de pé o coração
+              vermelho de Undertale, o jogo que inspirou a marca. Aqui ela vira
+              critério de entrega: um projeto só está bom quando aguenta a próxima
+              mudança do negócio sem precisar recomeçar.
             </p>
 
             <div className="border-borda mt-12 border-t pt-8">
@@ -77,9 +68,9 @@ export function Sobre() {
                 Fundador da {site.name}
               </p>
               <p className="text-texto-suave mt-4 max-w-[46ch] leading-relaxed">
-                Mais de quatro anos em infraestrutura e cloud — hoje liderando um
+                Mais de quatro anos em infraestrutura e cloud, hoje liderando um
                 time responsável pela sustentação e disponibilidade de ambientes de
-                produção — somados ao desenvolvimento web que virou a operação da
+                produção, somados ao desenvolvimento web que virou a operação da
                 DETERA.
               </p>
               <p className="text-texto-suave mt-4 max-w-[46ch] leading-relaxed">
@@ -91,7 +82,7 @@ export function Sobre() {
                 href={site.founderPortfolio}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-texto decoration-sistema hover:text-sistema-viva mt-6 inline-block font-semibold underline underline-offset-[6px] transition-colors"
+                className="escolha text-texto decoration-sistema mt-6 inline-block font-semibold underline underline-offset-[6px]"
               >
                 Ver a trajetória técnica completa
               </a>

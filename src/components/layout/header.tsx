@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { Simbolo } from "@/components/brand/wordmark";
 import { ButtonLink } from "@/components/ui/button";
 import { navLinks } from "@/config/nav";
-import { obterLenis } from "@/lib/motion";
+import { criarGrade } from "@/lib/grade";
+import { gsap, obterLenis, prefereMenosMovimento } from "@/lib/motion";
 import { cn } from "@/lib/utils/cn";
 import { whatsappUrl } from "@/lib/utils/whatsapp";
 
@@ -16,9 +17,11 @@ export function Header() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [solido, setSolido] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
+  const painel = useRef<HTMLDivElement>(null);
+  const gradeDoMenu = useRef<HTMLDivElement>(null);
 
   /**
-   * Transparente sobre o hero, vidro fosco depois dele.
+   * Transparente sobre o hero, sólido depois dele.
    *
    * Quem avisa é o marco `data-fim-do-hero`, no fim do invólucro do hero
    * (depois do espaço que o trecho fixado acrescenta): o cabeçalho fica
@@ -89,35 +92,60 @@ export function Header() {
     };
   }, [menuAberto]);
 
+  /**
+   * O menu do celular abre preenchendo a tela com blocos: uma grade de
+   * quadrados acende um a um, numa ordem sorteada, até cobrir tudo, e os
+   * links aparecem por cima, um de cada vez. É a mesma grade da travessia do
+   * hero e da montagem dos prints, agora em resposta a um toque.
+   *
+   * Fecha de uma vez, sem animação: quem fecha o menu quer a página de volta.
+   * Com movimento reduzido o painel já nasce sólido (`motion-reduce:`).
+   */
+  useEffect(() => {
+    if (!menuAberto || prefereMenosMovimento()) return;
+    const grade = criarGrade(gradeDoMenu.current!, {
+      lado: 44,
+      semente: 3203,
+      classe: "grade-bloco grade-bloco--menu",
+    });
+    const itens = painel.current!.querySelectorAll("[data-menu-item]");
+    const tl = gsap
+      .timeline()
+      .fromTo(grade.blocos, { opacity: 0 }, { opacity: 1, duration: 0.01, stagger: { amount: 0.26 } })
+      .fromTo(itens, { opacity: 0 }, { opacity: 1, duration: 0.01, stagger: 0.05 }, "-=0.1");
+    return () => {
+      tl.kill();
+      grade.remover();
+    };
+  }, [menuAberto]);
+
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,backdrop-filter] duration-500",
-        solido || menuAberto
-          ? "border-borda bg-vazio/70 backdrop-blur-md backdrop-saturate-150"
-          : "border-transparent bg-transparent",
+        // Sem vidro: fundo sólido e a troca em dois degraus, não num
+        // esmaecer. O desfoque atrás do cabeçalho redesenhava o que passava
+        // por baixo a cada quadro de rolagem.
+        "fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color] duration-200 ease-[steps(2)]",
+        solido || menuAberto ? "border-borda bg-vazio" : "border-transparent bg-transparent",
       )}
     >
       <div className="mx-auto flex h-[4.5rem] w-full max-w-[76rem] items-center justify-between gap-6 px-6 md:px-10">
         {/* Só o símbolo no cabeçalho: o nome aparece inteiro logo abaixo, no
-            hero, e em tamanho que nenhuma marca de menu alcança. A marca não
-            fica parada — e no hover ela acelera. */}
+            hero. É o único símbolo vivo da página (respira em repouso) e
+            acelera quando o ponteiro passa. */}
         <a
           href="#topo"
           className="group text-texto shrink-0"
           aria-label="DETERA, ir para o início do site"
         >
-          <Simbolo className="h-10 w-8" />
+          <Simbolo vivo className="h-10 w-8" />
         </a>
 
         <nav aria-label="Navegação principal" className="hidden lg:block">
           <ul className="flex items-center gap-7">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <a
-                  href={link.href}
-                  className="text-texto-suave hover:text-texto decoration-determinacao text-[0.92rem] underline-offset-[7px] transition-colors hover:underline"
-                >
+                <a href={link.href} className="escolha text-texto-suave text-[0.92rem]">
                   {link.label}
                 </a>
               </li>
@@ -169,20 +197,24 @@ export function Header() {
       </div>
 
       {/* `hidden` em vez de desmontar: os links continuam no HTML entregue,
-          então o rastreador enxerga a navegação sem executar o menu. */}
+          então o rastreador enxerga a navegação sem executar o menu. O painel
+          cobre a tela abaixo do cabeçalho; o fundo dele é a grade de blocos
+          (`gradeDoMenu`), preenchida ao abrir. */}
       <div
         id="menu-mobile"
+        ref={painel}
         hidden={!menuAberto}
-        className="border-borda bg-vazio border-t lg:hidden"
+        className="motion-reduce:bg-camada-alta fixed inset-x-0 top-[4.5rem] bottom-0 overflow-y-auto lg:hidden"
       >
-        <nav aria-label="Navegação principal, versão compacta">
-          <ul className="flex flex-col px-6 py-2">
+        <div ref={gradeDoMenu} aria-hidden="true" className="grade-menu" />
+        <nav aria-label="Navegação principal, versão compacta" className="relative">
+          <ul className="flex flex-col px-6 pt-4 pl-12">
             {navLinks.map((link) => (
-              <li key={link.href} className="border-borda border-b last:border-b-0">
+              <li key={link.href} data-menu-item className="border-borda border-b last:border-b-0">
                 <a
                   href={link.href}
                   onClick={() => setMenuAberto(false)}
-                  className="text-texto font-display block py-4 text-[1.15rem] font-bold"
+                  className="escolha text-texto font-display block py-4 text-[1.4rem] font-bold"
                 >
                   {link.label}
                 </a>
@@ -190,7 +222,7 @@ export function Header() {
             ))}
           </ul>
         </nav>
-        <div className="px-6 pt-2 pb-6">
+        <div data-menu-item className="relative px-6 pt-6 pb-8 pl-12">
           <ButtonLink
             href={whatsappUrl(mensagemTopo)}
             className="w-full"

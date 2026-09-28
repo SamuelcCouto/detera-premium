@@ -22,6 +22,6 @@ export const sintomas = [
   {
     titulo: "Depois que entrou no ar, ninguém mais olhou",
     texto:
-      "Página lenta, certificado vencido, formulário quebrado há semanas. O problema não é ninguém ter construído — é ninguém ter ficado responsável.",
+      "Página lenta, certificado vencido, formulário quebrado há semanas. Alguém construiu, mas ninguém ficou responsável.",
   },
 ] as const;

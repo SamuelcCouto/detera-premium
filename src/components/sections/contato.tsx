@@ -1,4 +1,3 @@
-import { Estrelas } from "@/components/sections/estrelas";
 import { Container } from "@/components/ui/container";
 import {
   IconeEmail,
@@ -17,7 +16,7 @@ const canais = [
       "Olá! Vim pelo site da DETERA e quero conversar sobre um projeto para a minha empresa.",
     ),
     rotulo: site.contact.phone,
-    descricao: "WhatsApp — costuma ser o caminho mais rápido",
+    descricao: "WhatsApp, costuma ser o caminho mais rápido",
     Icone: IconeWhatsapp,
   },
   {
@@ -45,16 +44,10 @@ export function Contato() {
     <Section
       id="contato"
       tone="camada"
+      ceu={0.8}
       space="generous"
       aria-labelledby="contato-titulo"
     >
-      <Estrelas
-        quantidade={72}
-        semente={9137}
-        cadentes={4}
-        cometas={2}
-        nebulosa="mista"
-      />
 
       <Container className="relative">
         <div className="grid gap-14 md:grid-cols-2 md:gap-20">
@@ -67,9 +60,8 @@ export function Contato() {
               que precisa acontecer para tirar isso do lugar.
             </p>
             <p className="text-texto-suave mt-4 max-w-[46ch] leading-relaxed">
-              A primeira conversa é um diagnóstico, não uma apresentação de
-              proposta — inclusive quando a resposta honesta for que não somos a
-              melhor escolha para o seu caso.
+              A primeira conversa é um diagnóstico. Se a resposta honesta for que
+              outra empresa atende melhor o seu caso, você ouve isso também.
             </p>
 
             <ul className="mt-10 flex flex-col">
@@ -79,11 +71,11 @@ export function Contato() {
                     href={href}
                     target={href.startsWith("http") ? "_blank" : undefined}
                     rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-                    className="group flex items-center gap-4 py-4"
+                    className="flex items-center gap-4 py-4"
                   >
                     <Icone className="text-determinacao h-5 w-5 shrink-0" />
                     <span className="min-w-0">
-                      <span className="text-texto group-hover:text-determinacao-viva block font-semibold break-all transition-colors">
+                      <span className="escolha text-texto block font-semibold break-all">
                         {rotulo}
                       </span>
                       <span className="text-texto-fraco block text-[0.85rem]">

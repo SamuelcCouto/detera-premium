@@ -23,10 +23,12 @@ export function Contador({ valor }: { valor: number }) {
         const el = ref.current!;
         const estado = { v: 0 };
         el.textContent = "0";
+        // Em degraus: o número sobe aos saltos, como placar de jogo, e não
+        // desliza.
         gsap.to(estado, {
           v: valor,
-          duration: 1.4,
-          ease: "power2.out",
+          duration: 1,
+          ease: "steps(10)",
           onUpdate: () => {
             el.textContent = String(Math.round(estado.v));
           },

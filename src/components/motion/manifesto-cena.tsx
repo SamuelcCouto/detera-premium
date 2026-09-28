@@ -2,7 +2,9 @@
 
 import { useRef, type ReactNode } from "react";
 
+import { falar } from "@/lib/fala";
 import { COM_MOVIMENTO, gsap, useGSAP } from "@/lib/motion";
+import { montarCoracao } from "@/lib/montar-coracao";
 
 /**
  * Altura mínima para o palco. Numa tela deitada de celular não cabe o título
@@ -10,26 +12,28 @@ import { COM_MOVIMENTO, gsap, useGSAP } from "@/lib/motion";
  */
 const COM_PALCO = `${COM_MOVIMENTO} and (min-height: 560px)`;
 
-/** Unidades da timeline de cada par. Só a proporção importa: o scrub estica. */
-const ENTRA = 0.35;
-const CRISTALIZA = 0.7;
-const FICA = 0.35;
-const SAI = 0.35;
+/** Unidades da timeline. Só a proporção importa: o scrub estica. */
+const GENERICA = 0.14;
+const ESPECIFICA = 0.6;
+const LEITURA = 0.26;
+const FECHO = 0.45;
 
 /**
- * O momento marcante: "de genérico a personalidade".
+ * O manifesto como diálogo: "transformando ideias em personalidade" dito,
+ * não explicado.
  *
- * A seção é fixada e vira um palco. Para cada par, a frase genérica entra
- * grande, em cinza; com a rolagem ela recua até virar rótulo e a frase
- * específica se resolve palavra por palavra, do blur para o nítido — o
- * contrário exato do hero, onde o nome se desfaz em blur. O nó vermelho
- * acende e o losango de progresso avança. Depois do quarto par, o fecho
- * ("…até virar reconhecível") entra com o coração da marca acendendo.
+ * A seção fica fixada e vira uma caixa de fala. Para cada par, a ideia
+ * genérica aparece em cinza, o coração vermelho marca quem vai falar e a
+ * frase específica sai letra a letra embaixo dela, no ritmo da rolagem — com
+ * a pausa depois de cada vírgula e ponto. Lida a frase, o losango do par
+ * acende e fica aceso (salvo), e a fala avança de uma vez para o próximo par,
+ * como uma caixa de diálogo que troca de página. No fim, o coração se monta
+ * bloco a bloco ao lado da última frase: o gesto-assinatura de novo, agora
+ * fechando o argumento.
  *
  * Sem JavaScript, com movimento reduzido ou em tela baixa, nada disto roda e
- * a seção é a lista de antes. O modo palco é só uma classe
- * (`manifesto--palco`) que este componente põe e tira; o layout dele mora
- * no CSS. Por isso o HTML do servidor já é a versão legível.
+ * a seção é a lista de sempre: o modo palco é só a classe `manifesto--palco`,
+ * que este componente põe e tira, com o layout no CSS.
  */
 export function ManifestoCena({ children }: { children: ReactNode }) {
   const raiz = useRef<HTMLDivElement>(null);
@@ -42,118 +46,68 @@ export function ManifestoCena({ children }: { children: ReactNode }) {
         const secao = raiz.current!.querySelector<HTMLElement>(".manifesto")!;
         secao.classList.add("manifesto--palco");
 
+        // O bloco de fala dentro de um elemento, e quantas letras ele tem.
+        const falaDe = (el: Element, seletor: string) =>
+          el.querySelector(`${seletor} [data-fala]`)!;
+        const letras = (bloco: Element) => bloco.querySelectorAll("[data-fala-letra]").length;
+
         const pares = gsap.utils.toArray<HTMLElement>("[data-par]");
         const progresso = gsap.utils.toArray<HTMLElement>("[data-progresso-vivo]");
+        const fecho = raiz.current!.querySelector<HTMLElement>("[data-fecho]")!;
+        const marca = fecho.querySelector<SVGSVGElement>("[data-fecho-marca] svg")!;
+        const falaDoFecho = falaDe(fecho, "[data-fecho-texto]");
 
-        // Antes do pin, a frase genérica desce até o centro do par: sozinha
-        // na tela, ela ficaria alta demais, com o espaço da específica
-        // (ainda invisível) sobrando embaixo.
-        const descida = (par: HTMLElement) =>
-          (par.querySelector<HTMLElement>("[data-especifico]")!.offsetHeight + 24) / 2;
-
-        pares.forEach((par, indice) => {
-          const generico = par.querySelector("[data-generico]");
-          gsap.set(par, { autoAlpha: indice === 0 ? 1 : 0 });
-          gsap.set(generico, {
-            y: () => descida(par),
-            opacity: indice === 0 ? 1 : 0,
-            transformOrigin: "0% 100%",
-          });
-          gsap.set(par.querySelectorAll("[data-palavra]"), {
-            opacity: 0,
-            y: 14,
-            filter: "blur(12px)",
-          });
-          gsap.set(par.querySelector("[data-no]"), { opacity: 0, scale: 0 });
-        });
-        gsap.set("[data-fecho]", { autoAlpha: 0, y: 30, filter: "blur(10px)" });
-        gsap.set("[data-fecho-marca]", { scale: 0.6, filter: "drop-shadow(0 0 0px #ff3b3b)" });
         gsap.set(progresso, { opacity: 0 });
+        gsap.set(fecho, { autoAlpha: 0 });
+        pares.forEach((par, i) => {
+          gsap.set(par, { autoAlpha: i === 0 ? 1 : 0 });
+          gsap.set(par.querySelector("[data-voz]"), { opacity: 0 });
+        });
 
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
             trigger: secao,
             start: "top top",
-            end: "+=320%",
+            end: "+=240%",
             pin: true,
             scrub: true,
+            anticipatePin: 1,
           },
         });
 
-        pares.forEach((par, indice) => {
-          const generico = par.querySelector("[data-generico]");
-          const palavras = par.querySelectorAll("[data-palavra]");
+        let t = 0;
+        pares.forEach((par, i) => {
+          const generica = falaDe(par, "[data-generico]");
+          const especifica = falaDe(par, "[data-especifico]");
 
-          if (indice > 0) {
-            tl.to(par, { autoAlpha: 1, duration: 0.01 }).fromTo(
-              generico,
-              { opacity: 0, filter: "blur(8px)" },
-              { opacity: 1, filter: "blur(0px)", duration: ENTRA, ease: "power2.out" },
-            );
+          // A primeira ideia genérica já está na tela quando a seção chega;
+          // as outras são faladas quando o par entra.
+          if (i > 0) {
+            tl.set(par, { autoAlpha: 1 }, t);
+            t = falar(tl, generica, { inicio: t, porLetra: GENERICA / letras(generica), pausa: 1 }) + 0.04;
           }
-
-          tl.addLabel(`cristaliza-${indice}`)
-            .to(
-              generico,
-              // Sobe rápido e assenta devagar (`out`), em 60% do tempo: tem
-              // que sair da frente antes de a específica aparecer embaixo.
-              { y: 0, scale: 0.56, opacity: 0.55, duration: CRISTALIZA * 0.6, ease: "power2.out" },
-              `cristaliza-${indice}`,
-            )
-            .to(
-              palavras,
-              {
-                opacity: 1,
-                y: 0,
-                filter: "blur(0px)",
-                duration: CRISTALIZA * 0.4,
-                ease: "power2.out",
-                stagger: { amount: CRISTALIZA * 0.45 },
-              },
-              // Só depois que a genérica saiu da frente: começando junto,
-              // no celular as primeiras palavras nasciam por baixo da última
-              // linha dela, que ainda estava subindo.
-              `cristaliza-${indice}+=${CRISTALIZA * 0.35}`,
-            )
-            .to(
-              par.querySelector("[data-no]"),
-              { opacity: 1, scale: 1, duration: 0.15, ease: "back.out(3)" },
-              `cristaliza-${indice}+=${CRISTALIZA * 0.9}`,
-            )
-            .to(progresso[indice], { opacity: 1, duration: 0.12 }, "<")
-            .to({}, { duration: FICA });
-
-          tl.to(par, {
-            autoAlpha: 0,
-            y: -40,
-            filter: "blur(6px)",
-            duration: SAI,
-            ease: "power1.in",
+          tl.set(par.querySelector("[data-voz]"), { opacity: 1 }, t);
+          t = falar(tl, especifica, {
+            inicio: t + 0.02,
+            porLetra: ESPECIFICA / letras(especifica),
+            pausa: 4,
           });
+          tl.set(progresso[i], { opacity: 1 }, t);
+          t += LEITURA;
+          // A fala avança de página: o par sai de uma vez, sem transição.
+          tl.set(par, { autoAlpha: 0 }, t);
+          t += 0.02;
         });
 
-        tl.to("[data-fecho]", {
-          autoAlpha: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 0.45,
-          ease: "power2.out",
-        })
-          .to(
-            "[data-fecho-marca]",
-            {
-              scale: 1,
-              filter: "drop-shadow(0 0 16px #ff3b3b)",
-              duration: 0.35,
-              ease: "power2.out",
-            },
-            "-=0.15",
-          )
-          .to({}, { duration: 0.4 });
-
-        // O céu do manifesto sobe devagar durante o palco inteiro.
-        tl.to("[data-manifesto-ceu]", { yPercent: -8, duration: tl.duration() }, 0);
+        tl.set(fecho, { autoAlpha: 1 }, t);
+        t = montarCoracao(tl, marca, { inicio: t, passo: 0.02 });
+        t = falar(tl, falaDoFecho, {
+          inicio: t - 0.12,
+          porLetra: FECHO / letras(falaDoFecho),
+          pausa: 4,
+        });
+        tl.to({}, { duration: 0.35 }, t);
 
         return () => secao.classList.remove("manifesto--palco");
       });

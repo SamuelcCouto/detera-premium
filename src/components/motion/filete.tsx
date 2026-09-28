@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils/cn";
 
 /**
  * Linha fina que se desenha da esquerda para a direita enquanto entra na
- * tela, conduzida pela rolagem.
+ * tela, conduzida pela rolagem, em 16 degraus: um pixel de cada vez, e não
+ * um traço deslizando.
  *
  * Por `scaleX`, não por `width`: a largura é a final desde o começo e só o
  * `transform` muda, então a rolagem não recalcula layout nenhum. Sem
@@ -25,7 +26,7 @@ export function Filete({ className }: { className?: string }) {
           { scaleX: 0 },
           {
             scaleX: 1,
-            ease: "none",
+            ease: "steps(16)",
             scrollTrigger: { trigger: ref.current, start: "top 92%", end: "top 62%", scrub: true },
           },
         );

@@ -810,6 +810,17 @@
   display: none;
 }
 
+/* A página parada no fim do manifesto enquanto a fala termina. Só em tela de
+   toque: ali um arrasto já em curso não pode ser cancelado por JavaScript, e
+   sem isto a seção tremia entre o dedo e a correção. No desktop, esconder a
+   barra de rolagem mudaria a largura da página e recalcularia todos os
+   trechos fixados; lá a roda é segurada pelo Lenis. */
+@media (pointer: coarse) {
+  html.rolagem-retida {
+    overflow: hidden;
+  }
+}
+
 @media screen {
   .manifesto--palco {
     display: flex;

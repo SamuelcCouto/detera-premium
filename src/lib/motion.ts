@@ -35,6 +35,29 @@ export const definirLenis = (lenis: Lenis | null) => {
 };
 export const obterLenis = () => lenisAtual;
 
+/**
+ * Retenção da rolagem: um trecho fixado pode pedir para a roda do mouse não
+ * passar dele por enquanto (o manifesto segura até a fala terminar). O Lenis
+ * consulta isto antes de aceitar cada giro; devolver `true` descarta o giro.
+ * Mora aqui pelo mesmo motivo do Lenis: sem provider entre as seções.
+ */
+type Retencao = (deltaY: number) => boolean;
+let retencaoAtual: Retencao | null = null;
+export const definirRetencao = (retencao: Retencao | null) => {
+  retencaoAtual = retencao;
+};
+export const retem = (deltaY: number) => retencaoAtual?.(deltaY) ?? false;
+
+/**
+ * Enquanto um link de âncora rola a página, nenhum trecho segura: quem clicou
+ * em "Contato" pediu para ir até lá, não para ouvir o manifesto no caminho.
+ */
+let navegandoAgora = false;
+export const marcarNavegacao = (ativa: boolean) => {
+  navegandoAgora = ativa;
+};
+export const estaNavegando = () => navegandoAgora;
+
 export const prefereMenosMovimento = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;

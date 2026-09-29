@@ -4,7 +4,14 @@ import { useEffect } from "react";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
-import { definirLenis, gsap, prefereMenosMovimento, ScrollTrigger } from "@/lib/motion";
+import {
+  definirLenis,
+  gsap,
+  marcarNavegacao,
+  prefereMenosMovimento,
+  retem,
+  ScrollTrigger,
+} from "@/lib/motion";
 
 /**
  * Rolagem suave ligada ao ScrollTrigger. Vai uma vez no layout raiz e não
@@ -33,13 +40,25 @@ export function SmoothScroll() {
       };
     }
 
-    const lenis = new Lenis({ lerp: 0.09 });
+    // É por aqui que um trecho fixado segura a roda (ver `definirRetencao`).
+    // `virtualScroll` devolvendo `false` só faz o Lenis ignorar o giro; ele
+    // deixa de chamar `preventDefault`, e o navegador rolava a página por
+    // conta própria. Por isso o evento é cancelado aqui também.
+    const lenis = new Lenis({
+      lerp: 0.09,
+      virtualScroll: ({ deltaY, event }) => {
+        if (!retem(deltaY)) return true;
+        if (event.cancelable) event.preventDefault();
+        return false;
+      },
+    });
     definirLenis(lenis);
     lenis.on("scroll", ScrollTrigger.update);
     const avancar = (tempo: number) => lenis.raf(tempo * 1000);
     gsap.ticker.add(avancar);
     gsap.ticker.lagSmoothing(0);
 
+    let fimDaNavegacao = 0;
     const aoClicar = (evento: MouseEvent) => {
       if (
         evento.defaultPrevented ||
@@ -69,7 +88,19 @@ export function SmoothScroll() {
       // Sem `offset`: o Lenis já desconta o `scroll-padding-top` do CSS (a
       // altura do cabeçalho), e somar os dois deixava cada seção parando
       // 72px abaixo do cabeçalho em vez de encostada nele.
-      lenis.scrollTo(destino, { duration: 1.4 });
+      // Âncora atravessa trecho que segura a rolagem sem ser segurada. O
+      // prazo cobre o caso de a pessoa interromper a viagem com a roda, em
+      // que o `onComplete` nunca chega.
+      marcarNavegacao(true);
+      window.clearTimeout(fimDaNavegacao);
+      fimDaNavegacao = window.setTimeout(() => marcarNavegacao(false), 1800);
+      lenis.scrollTo(destino, {
+        duration: 1.4,
+        onComplete: () => {
+          window.clearTimeout(fimDaNavegacao);
+          marcarNavegacao(false);
+        },
+      });
       history.pushState(null, "", `#${id}`);
 
       if (!alvo.hasAttribute("tabindex")) alvo.setAttribute("tabindex", "-1");
@@ -83,6 +114,8 @@ export function SmoothScroll() {
     return () => {
       ativo = false;
       document.removeEventListener("click", aoClicar);
+      window.clearTimeout(fimDaNavegacao);
+      marcarNavegacao(false);
       gsap.ticker.remove(avancar);
       lenis.destroy();
       definirLenis(null);

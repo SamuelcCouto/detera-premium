@@ -1339,10 +1339,13 @@ html.js:not(.linear) .etiquetas {
 }
 .rodape nav ul {
   display: grid;
-  gap: 0.5rem;
   font-family: var(--font-display);
 }
+/* Alvo de toque de 44 px: a lista é apertada no desenho, não no dedo. */
 .rodape nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--color-poeira);
   text-decoration: none;
 }

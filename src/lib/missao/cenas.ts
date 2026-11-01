@@ -102,7 +102,7 @@ const ROTEIRO: Parcial[] = [
   // Sistema: um planeta por cena, em arco lateral, alternando os lados.
   { id: "solucoes", ato: "Sistema", hold: 55, foco: 0, dist: 5.2, az: 38, el: 10, ox: -0.2, lado: "dir", entrada: "lateral" },
   { id: "frente-crescimento", hold: 55, foco: 1, dist: 10.5, az: -32, el: 16, ox: 0.2, lado: "esq" },
-  { id: "frente-tecnologia", hold: 55, foco: 2, dist: 6, az: 62, el: -6, ox: -0.2, lado: "dir" },
+  { id: "frente-tecnologia", hold: 55, foco: 2, dist: 7.8, az: 62, el: -6, ox: -0.24, lado: "dir" },
   { id: "frente-infraestrutura", hold: 55, foco: 3, dist: 7.2, az: 10, el: 12, ox: 0.2, lado: "esq" },
 
   // Reentrada: a câmera mergulha no planeta azul.

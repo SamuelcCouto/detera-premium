@@ -11,15 +11,16 @@ Mantido pela skill desenvwebpremium. Atualize ao fim de cada etapa. Este arquivo
 |---|---|---|---|---|
 | 0 Preparar | — | concluída | 2026-11-01 | Briefing vem do conteúdo real do site (src/content, src/config). Ação principal: conversa no WhatsApp |
 | 1 Identidade | identidade-visual | concluída | 2026-11-01 (usuário pediu para ir direto) | Modo completar: marca mantida (nome desenhado, símbolo, vermelho, azul, Oxanium); paleta cósmica + Spectral como voz do narrador. docs/design-plan.md |
-| 2 Movimento e construção | site-premium | em andamento | 2026-11-01 (ir direto) | Gesto-assinatura: a reentrada. Palco sticky + keyframes de estado + Three.js |
-| 3 Mapa | cartographer | aberta | | Remapear depois da v3 |
+| 2 Movimento e construção | site-premium | concluída | 2026-11-01 (ir direto) | Gesto-assinatura: a reentrada. Palco sticky + keyframes de estado + Three.js. QA com prints desktop/celular, teclado, âncoras, dossiê, movimento reduzido. Aguarda o olhar do usuário |
+| 3 Mapa | cartographer | concluída | 2026-11-01 | docs/CODEBASE_MAP.md e CLAUDE.md atualizados para a v3 |
 | 4 Ajustes | — | | | |
-| 5 Celular | mobile | | | |
-| 6 Segurança e publicação | seguranca-web | | | Formulário só abre o WhatsApp (sem backend); publicação por push no main |
+| 5 Celular | mobile | concluída | 2026-11-01 | 0 problemas graves em 11 tamanhos (1920×1080 derruba o Chromium headless com WebGL por software; checado por prints). Falta teste em aparelho real |
+| 6 Segurança e publicação | seguranca-web | concluída | 2026-11-01 | Sem backend nem coleta (formulário abre o WhatsApp). Publicado por push no main |
 | 7 Fechar | — | | | |
 
 ## Decisões do cliente
 - 2026-11-01: v2 recusada ("cara de site feito por IA"). Pedido: experiência totalmente diferente, imersão no cosmos, gravidade, entrada em atmosfera, sistemas solares, transições horizontais e verticais, cinematográfica. Liberdade total de ferramenta. Publicar direto sobrescrevendo (versão de teste).
 
 ## Pendências
-- 
+- Teste em celular de verdade (em pé e deitado) e num notebook comum: o headless usa WebGL por software e não mede FPS real.
+- O manual de identidade em docs/identidade é da v2 (não reflete a paleta cósmica nem a Spectral).

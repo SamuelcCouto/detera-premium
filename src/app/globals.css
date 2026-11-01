@@ -1,110 +1,62 @@
 @import "tailwindcss";
 
 /* ==================================================================
-   DETERA — sistema de design
+   DETERA v3 — "Reentrada"
 
-   Conceito: a alma em blocos. DETERA vem de DETERMINAÇÃO, a força do
-   coração vermelho de Undertale, o jogo que inspirou a marca. O site
-   empresta do jogo a lógica, nunca o material: um coração que é cursor,
-   texto que é fala, blocos de pixel que encaixam na grade e pontos que
-   salvam o progresso.
+   A página é uma missão: a câmera chega ao sistema DETERA (o núcleo
+   vermelho e as quatro frentes em órbita), atravessa os planetas, entra
+   na atmosfera do planeta azul, pousa onde estão os projetos e volta à
+   órbita. O plano completo está em `docs/design-plan.md`.
 
-   Cor: dois acentos com significado fixo, nunca decorativos.
-   Vermelho (determinação) = ação, estado ativo, o núcleo, a alma.
-   Azul (sistema) = infraestrutura, dado, o que sustenta.
+   Cor com papel. O vácuo é azul-noite, não preto tingido. Vermelho é
+   ação e o núcleo; laranja (plasma) só existe na reentrada; o azul claro
+   (atmosfera) é instrumento e link.
 
-   Movimento: tudo que é pixel anda em degraus (`steps`). Nada de blur,
-   brilho neon, vidro, mola ou gradiente decorativo.
+   Duas vozes: Oxanium (a marca) nos títulos, instrumentos e botões;
+   Spectral, a voz do narrador, no texto corrido e no manifesto.
 
-   Tipografia: uma família só, Oxanium, do leve ao pesado. Cantos
-   chanfrados a 45° e proporção larga, a mesma personalidade do nome
-   desenhado (`Letreiro`), que não usa fonte nenhuma.
+   O que a marca não faz: blur, vidro, neon, degradê de enfeite, cortina
+   do centro, fade-and-rise em todo bloco, rótulo em caixa alta, seta no
+   fim do botão.
    ================================================================== */
 @theme {
-  /* Superfícies — preto com desvio de azul, nunca preto neutro */
-  --color-vazio: #07080b;
-  --color-camada: #0e1015;
-  --color-camada-alta: #161920;
-  --color-borda: #23262e;
-  --color-borda-viva: #363b45;
-  /* Limite de componente interativo: campo e botão precisam de 3:1 contra
-     o fundo (WCAG 1.4.11). Era #5c626d e dava 2,87 sobre camada-alta, o
-     fundo dos campos; subiu só na luminosidade (OKLCH, mesmo matiz) até o
-     tom mais próximo que passa nos três fundos. */
-  --color-contorno: #606671;
-
-  /* Texto */
-  --color-texto: #f2f3f5;
-  --color-texto-suave: #9ba1ac;
-  /* Era #767c88: 4,19 sobre camada-alta, abaixo dos 4,5 do AA para texto
-     normal. Mesmo ajuste do contorno: 4,56 no pior fundo. */
-  --color-texto-fraco: #7c828e;
-
-  /* Determinação — ação, estado ativo, núcleo. Texto claro sobre ela dá
-     3,18: só texto grande. O botão principal usa o vazio (5,67). */
+  --color-vacuo: #050913;
+  --color-painel: #0c1424;
+  --color-luz: #eef0f6;
+  --color-poeira: #9aa6be;
   --color-determinacao: #ff3b3b;
-  --color-determinacao-viva: #ff6b6b;
-  --color-determinacao-funda: #3d0f14;
-
-  /* Sistema — infraestrutura, continuidade, dado */
+  --color-plasma: #ff8a3d;
+  --color-atmosfera: #8fb3ff;
   --color-sistema: #4c7dff;
-  --color-sistema-viva: #7ca0ff;
-  --color-sistema-funda: #10203f;
+  /* Linha de instrumento e de componente: 3:1 sobre o vácuo e o painel. */
+  --color-traco: #5a6a8c;
 
-  /* Tipografia — uma família só, papéis diferentes por peso e espacejamento.
-     Auto-hospedada logo abaixo (`@font-face`), não via next/font: o
-     carregador do Turbopack não resolve os arquivos da Oxanium neste
-     ambiente, e servir o woff2 do próprio `public/` também satisfaz o
-     `font-src 'self'` da CSP. */
-  --font-display: "Oxanium", system-ui, -apple-system, sans-serif;
-  --font-sans: "Oxanium", system-ui, -apple-system, sans-serif;
+  /* Nomes da v2, ainda usados pelas páginas de erro e pelo formulário. */
+  --color-vazio: #050913;
+  --color-camada: #0c1424;
+  --color-camada-alta: #121c31;
+  --color-borda: #1f2a42;
+  --color-borda-viva: #33415f;
+  --color-contorno: #5a6a8c;
+  --color-texto: #eef0f6;
+  --color-texto-suave: #9aa6be;
+  --color-texto-fraco: #8591aa;
+  --color-determinacao-viva: #ff6b6b;
+
+  --font-display: "Oxanium", system-ui, sans-serif;
+  --font-sans: "Spectral", Georgia, serif;
   --font-mono: "Oxanium", ui-monospace, monospace;
-
-  /*
-    Escala — salto largo no display, razão ~1.25 no corpo.
-
-    Três volumes de voz, e cada seção recebe o seu pelo peso do que diz:
-      `display`     o que a empresa é e o que ela vende. Duas seções.
-      `subdisplay`  o argumento: prova, problema, tese, fechamento.
-      `title`       utilidade: processo e dúvidas.
-  */
-  --text-marca: clamp(3.25rem, 1rem + 9vw, 8rem);
-  --text-marca--line-height: 0.86;
-  --text-marca--letter-spacing: -0.045em;
 
   --text-display: clamp(2.1rem, 1.2rem + 3.6vw, 3.75rem);
   --text-display--line-height: 1;
-  --text-display--letter-spacing: -0.03em;
-
-  --text-subdisplay: clamp(1.8rem, 1.15rem + 2.5vw, 3rem);
-  --text-subdisplay--line-height: 1.04;
-  --text-subdisplay--letter-spacing: -0.025em;
-
-  --text-title: clamp(1.5rem, 1.15rem + 1.4vw, 2.25rem);
-  --text-title--line-height: 1.1;
-  --text-title--letter-spacing: -0.02em;
-
+  --text-lead: clamp(1.05rem, 1rem + 0.4vw, 1.25rem);
+  --text-lead--line-height: 1.6;
   --text-heading: clamp(1.1rem, 1rem + 0.45vw, 1.35rem);
   --text-heading--line-height: 1.25;
-  --text-heading--letter-spacing: -0.01em;
-
-  --text-lead: clamp(1.05rem, 1rem + 0.4vw, 1.25rem);
-  --text-lead--line-height: 1.65;
-
-  --text-micro: 0.78rem;
-  --text-micro--line-height: 1.5;
-  --text-micro--letter-spacing: 0.02em;
-
-  /* Forma — raio curto: interface técnica, não cartão de SaaS */
-  --radius-min: 2px;
-  --radius-bloco: 4px;
-
-  --ease-decidido: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ------------------------------------------------------------------
-   Oxanium — auto-hospedada. Fonte variável: um arquivo por subconjunto
-   cobre o eixo de peso inteiro (200–800).
+   Fontes — auto-hospedadas (CSP `font-src 'self'`).
    ------------------------------------------------------------------ */
 @font-face {
   font-family: "Oxanium";
@@ -126,882 +78,1425 @@
     U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
     U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
+@font-face {
+  font-family: "Spectral";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/spectral-latin-300-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Spectral";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/spectral-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Spectral";
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/spectral-latin-300-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Spectral";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/spectral-latin-ext-300-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Spectral";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/spectral-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
+/* ------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------ */
 @layer base {
-  :root {
-    color-scheme: dark;
-    /* Sem `scroll-behavior: smooth`: quem suaviza a rolagem é o Lenis
-       (`smooth-scroll.tsx`), e os dois juntos animavam cada âncora duas
-       vezes. Altura exata do cabeçalho fixo, para o salto nativo. */
+  html {
+    background: var(--color-vacuo);
+    color: var(--color-luz);
+    /* A altura do cabeçalho: âncora fora da missão para encostada nele. */
     scroll-padding-top: 4.5rem;
-
-    /* A alma: o coração vermelho, sólido, recortado da geometria da marca
-       (as duas placas e a costura entre elas). É a máscara do
-       cursor-coração e de todo coração vermelho pequeno da página. */
-    --alma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='5 11.4 22 19.9'%3E%3Cpath d='M14.6 14.2L12.8 11.4H10.8L9.2 12.8H6.6V15.2H5V19H6.6V20.6L9.6 23.6V24.8L14.6 29.8Z'/%3E%3Cpath transform='translate(32 0) scale(-1 1)' d='M14.6 14.2L12.8 11.4H10.8L9.2 12.8H6.6V15.2H5V19H6.6V20.6L9.6 23.6V24.8L14.6 29.8Z'/%3E%3Cpath d='M14.5 14.2H17.5V29.8L16 31.3L14.5 29.8Z'/%3E%3C/svg%3E");
+    -webkit-text-size-adjust: 100%;
   }
-
-  /* O fundo é o vazio; por cima dele, atrás de todo o resto, o céu
-     (`CeuVivo`). Sem grão fixo sobre a tela: era uma camada do tamanho da
-     tela composta a cada quadro, sem função. */
   body {
-    background-color: var(--color-vazio);
-    color: var(--color-texto);
     font-family: var(--font-sans);
-    font-synthesis-weight: none;
-    text-rendering: optimizeLegibility;
+    font-size: 1.06rem;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: var(--font-display);
-    font-weight: 700;
     text-wrap: balance;
   }
-
   p {
     text-wrap: pretty;
   }
-
-  :focus-visible {
-    outline: 2px solid var(--color-determinacao);
-    outline-offset: 3px;
-    border-radius: 1px;
-  }
-
-  /* Seção que recebe o foco por âncora (`tabindex="-1"`, posto pelo
-     `SmoothScroll`): o foco vai para lá só para o próximo Tab continuar
-     dali, e um contorno em volta da seção inteira seria ruído. */
-  [tabindex="-1"]:focus {
-    outline: none;
-  }
-
   ::selection {
     background: var(--color-determinacao);
-    color: var(--color-vazio);
+    color: var(--color-vacuo);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-atmosfera);
+    outline-offset: 3px;
+  }
+  a {
+    color: inherit;
   }
 }
 
-@layer components {
-  /* Pular para o conteúdo. Classe própria, e não `sr-only
-     focus:not-sr-only`: as duas utilities caem na mesma especificidade e
-     a ordem de emissão decide quem vence. */
-  .pular-conteudo {
-    position: absolute;
-    top: 0;
-    left: -9999px;
-    z-index: 100;
-    padding: 0.75rem 1.25rem;
-    background: var(--color-determinacao);
-    color: var(--color-vazio);
-    font-weight: 600;
-  }
-
-  .pular-conteudo:focus {
-    top: 0.75rem;
-    left: 0.75rem;
-  }
-
-  /* ----------------------------------------------------------------
-     A trilha: o filete contínuo que atravessa a página, com um losango
-     por seção (pontos de continuação). Cinza de propósito: nunca uma
-     faixa colorida na lateral. A partir de 1280px, onde sobra margem.
-     ---------------------------------------------------------------- */
-  .trilha {
-    display: none;
-  }
-
-  @media (min-width: 80rem) {
-    .trilha {
-      display: block;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: calc(max(0px, (100% - 76rem) / 2) + 1.15rem);
-      width: 1px;
-      background: linear-gradient(
-        to bottom,
-        var(--color-borda) 0,
-        var(--color-borda) calc(100% - 6rem),
-        transparent 100%
-      );
-      pointer-events: none;
-    }
-
-    .trilha::before {
-      content: "";
-      position: absolute;
-      top: 5.25rem;
-      left: 50%;
-      width: 7px;
-      height: 7px;
-      transform: translateX(-50%) rotate(45deg);
-      background: var(--color-vazio);
-      border: 1px solid var(--color-borda-viva);
-    }
-
-    .trilha--fim {
-      background: linear-gradient(to bottom, var(--color-borda) 0, transparent 92%);
-    }
-
-    .trilha--fim::before {
-      display: none;
-    }
-  }
-
-  /* ----------------------------------------------------------------
-     Botões — três variantes, estados explícitos. A troca de estado é
-     em dois degraus, não um esmaecer.
-     ---------------------------------------------------------------- */
-  .btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    border-radius: var(--radius-min);
-    border: 1px solid transparent;
-    font-weight: 600;
-    letter-spacing: -0.005em;
-    white-space: nowrap;
-    transition:
-      background-color 0.12s steps(2),
-      border-color 0.12s steps(2),
-      color 0.12s steps(2);
-  }
-
-  .btn:active {
-    transform: translateY(1px);
-  }
-
-  .btn--determinacao {
-    background: var(--color-determinacao);
-    color: var(--color-vazio);
-  }
-
-  .btn--determinacao:hover {
-    background: var(--color-determinacao-viva);
-  }
-
-  .btn--contorno {
-    border-color: var(--color-contorno);
-    color: var(--color-texto);
-  }
-
-  .btn--contorno:hover {
-    border-color: var(--color-sistema);
-    color: var(--color-sistema-viva);
-  }
-
-  .btn--fantasma {
-    color: var(--color-texto-suave);
-  }
-
-  .btn--fantasma:hover {
-    color: var(--color-texto);
-  }
-
-  /* Bloco: a caixa base do sistema. Borda em vez de sombra — sobre preto,
-     sombra não existe. */
-  .bloco {
-    border: 1px solid var(--color-borda);
-    border-radius: var(--radius-bloco);
-    background: var(--color-camada);
-  }
-
-  /* Etiqueta de estado real (placar do jogo, "Em obra", 404). Caixa de
-     frase: rótulo em caixa alta espaçada é modelo pronto. Dígitos
-     alinhados para o placar não tremer de 9 para 10. */
-  .estado {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    color: var(--color-texto-fraco);
-  }
-
-  /* Campos de formulário */
-  .campo {
-    width: 100%;
-    border: 1px solid var(--color-contorno);
-    border-radius: var(--radius-min);
-    background: var(--color-camada-alta);
-    color: var(--color-texto);
-    padding: 0.75rem 0.9rem;
-    transition: border-color 0.12s steps(2);
-  }
-
-  .campo::placeholder {
-    color: var(--color-texto-fraco);
-  }
-
-  .campo:hover {
-    border-color: var(--color-texto-suave);
-  }
-
-  .campo:focus {
-    border-color: var(--color-determinacao);
-    outline: none;
-  }
-
-  .campo[aria-invalid="true"] {
-    border-color: var(--color-determinacao);
-  }
-
-  /* A caixa de diálogo da chamada: moldura grossa e reta, fundo vazio.
-     Sem barra de título nem bolinhas: é fala, não janela. */
-  .caixa-dialogo {
-    border: 2px solid var(--color-texto-suave);
-    background: var(--color-vazio);
-  }
-}
-
-/* ==================================================================
-   O cursor-coração
-
-   A alma de Undertale é o cursor dos menus do jogo: pula para a opção
-   escolhida, sem viajar até ela. Aqui ela marca o que é escolha — links
-   de navegação, frentes, perguntas, opções da chamada, campos — e
-   substitui o hover genérico. Só aparece em escolha; texto corrido
-   continua sublinhado.
-
-   - `.escolha`: o coração aparece sob o ponteiro (só em aparelho com
-     ponteiro de verdade) e com o foco do teclado;
-   - `.alma-marca`: o coração aparece quando um ancestral tem
-     `data-selecionada` (a leitura, na rolagem) ou `:focus-within`
-     (campo do formulário);
-   - `.escolhas`: num grupo com uma opção já selecionada, o coração sai
-     dela enquanto outra está sob o ponteiro ou o foco;
-   - `.alma`: o coração sozinho, como elemento.
-
-   Sem transição: aparece e some de uma vez. O contorno de foco
-   continua; o coração é um sinal a mais, nunca o único.
-   ================================================================== */
-.alma {
-  display: inline-block;
-  background-color: var(--color-determinacao);
-  -webkit-mask: var(--alma) center / contain no-repeat;
-  mask: var(--alma) center / contain no-repeat;
-}
-
-.escolha,
-.alma-marca {
-  position: relative;
-}
-
-.escolha::before,
-.alma-marca::before {
-  content: "";
-  position: absolute;
-  left: -1.35em;
-  top: calc(0.5lh - 0.4em);
-  width: 0.96em;
-  height: 0.8em;
-  background-color: var(--color-determinacao);
-  -webkit-mask: var(--alma) center / contain no-repeat;
-  mask: var(--alma) center / contain no-repeat;
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (hover: hover) {
-  .escolha:hover::before {
-    opacity: 1;
-  }
-}
-
-.escolha:focus-visible::before,
-.escolha[data-selecionada]::before,
-[data-selecionada] > .alma-marca::before,
-.campo-grupo:focus-within .alma-marca::before,
-.group:hover .alma-marca::before,
-.group:focus-visible .alma-marca::before {
-  opacity: 1;
-}
-
-@media (hover: hover) {
-  .escolhas:hover .escolha[data-selecionada]:not(:hover)::before {
-    opacity: 0;
-  }
-}
-
-.escolhas:focus-within .escolha[data-selecionada]:not(:focus-visible)::before {
-  opacity: 0;
-}
-
-/* Soluções: a entrega em leitura clareia junto com o coração. */
-.entrega dd {
-  transition: color 0.12s steps(2);
-}
-
-.entrega[data-selecionada] dd {
-  color: var(--color-texto);
-}
-
-/* ==================================================================
-   A fala (`TextoFala` + `lib/fala.ts`): cada letra tem o próprio índice
-   (`--i`) e o bloco diz quantas aparecem — `--fala` da primeira para a
-   frente, `--resto` quantas sobram ao apagar. Sem JavaScript as duas
-   contas valem "tudo" e o texto aparece inteiro.
-   ================================================================== */
-[data-fala] {
-  --fala: 100000;
-  --resto: 100000;
-}
-
-[data-fala-letra] {
-  opacity: clamp(0, min(var(--fala) - var(--i), var(--resto) - var(--i)), 1);
-}
-
-/* ==================================================================
-   O céu vivo — um canvas só, fixo atrás da página (`CeuVivo`).
-   `lvh`: com a barra do navegador recolhida a tela cresce, e o canvas já
-   tem a altura maior; não aparece faixa sem céu embaixo.
-   ================================================================== */
-.ceu-vivo {
+.pular-conteudo {
   position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -1;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--color-luz);
+  color: var(--color-vacuo);
+  font-family: var(--font-display);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+.pular-conteudo:focus {
+  transform: none;
+}
+
+/* O canvas da missão: fixo, atrás de tudo, na altura da tela com a barra do
+   navegador recolhida (`lvh`), para não pular quando ela some. */
+.palco-3d {
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100lvh;
-  pointer-events: none;
-}
-
-/* ==================================================================
-   A grade de blocos (`lib/grade.ts`): a travessia do núcleo, a montagem
-   dos prints e o menu do celular. Os blocos são criados pelo cliente;
-   aqui só a grade e a cor de cada uso.
-   ================================================================== */
-.travessia,
-.montagem,
-.grade-menu {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(var(--grade-colunas, 1), 1fr);
-  grid-template-rows: repeat(var(--grade-linhas, 1), 1fr);
-  pointer-events: none;
-}
-
-.travessia {
-  z-index: 20;
-  visibility: hidden;
-}
-
-.grade-bloco {
-  background: var(--color-determinacao);
-}
-
-.grade-bloco--tela {
-  background: var(--color-camada-alta);
-}
-
-.grade-bloco--menu {
-  background: var(--color-camada-alta);
-}
-
-/* ==================================================================
-   A marca viva — só o símbolo do cabeçalho. As metades respiram, o
-   núcleo pulsa e os traços piscam em sequência. Sem brilho em volta:
-   a linha vermelha já é o que acende.
-   ================================================================== */
-@keyframes marca-respira-esq {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(-0.45px);
-  }
-}
-
-@keyframes marca-respira-dir {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(0.45px);
-  }
-}
-
-@keyframes marca-nucleo-pulsa {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.72;
-    transform: scale(0.88);
-  }
-}
-
-@keyframes marca-traco-pisca {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.marca-viva .marca-placa--esq {
-  animation: marca-respira-esq 4.5s ease-in-out infinite;
-}
-
-.marca-viva .marca-placa--dir {
-  animation: marca-respira-dir 4.5s ease-in-out infinite;
-}
-
-.marca-viva .marca-nucleo {
-  transform-origin: 16px 20px;
-  animation: marca-nucleo-pulsa 2.8s steps(4) infinite;
-}
-
-.marca-viva .marca-traco {
-  animation: marca-traco-pisca 2.8s steps(3) infinite;
-}
-
-.marca-viva .marca-traco:nth-of-type(2),
-.marca-viva .marca-traco:nth-of-type(3) {
-  animation-delay: 0.35s;
-}
-
-/* No hover da marca no cabeçalho, o núcleo acelera. */
-.group:hover .marca-viva .marca-nucleo {
-  animation-duration: 0.9s;
-}
-
-/* ==================================================================
-   Prévia dos projetos
-   ================================================================== */
-
-/* Rodízio de fotos em fade. A primeira foto fica por baixo, sempre
-   visível: sem a animação (movimento reduzido, impressão), a prévia
-   mostra uma foto em vez de um quadro vazio. */
-@keyframes previa-troca {
-  0%,
-  3% {
-    opacity: 0;
-  }
-  7%,
-  22% {
-    opacity: 1;
-  }
-  26%,
-  100% {
-    opacity: 0;
-  }
-}
-
-.previa-slide {
+  z-index: -1;
+  display: block;
   opacity: 0;
-  animation: previa-troca var(--previa-duracao, 6.9s) ease-in-out infinite;
+  transition: opacity 1.4s ease;
 }
-
-/* A barra da obra enche e recomeça, em degraus. É a piada: obra nunca
-   termina. Parada em 70% sem animação: lê como obra em andamento. */
-@keyframes obra-barra {
-  0% {
-    transform: scaleX(0.04);
-  }
-  70% {
-    transform: scaleX(0.86);
-  }
-  86% {
-    transform: scaleX(0.92);
-  }
-  100% {
-    transform: scaleX(0.04);
-  }
-}
-
-.obra-barra {
-  transform: scaleX(0.7);
-  animation: obra-barra 6.4s steps(18) infinite;
-}
-
-/* Os recados se revezam no mesmo lugar. */
-@keyframes obra-recado {
-  0%,
-  4% {
-    opacity: 0;
-  }
-  9%,
-  28% {
-    opacity: 1;
-  }
-  33%,
-  100% {
-    opacity: 0;
-  }
-}
-
-.obra-recado {
-  opacity: 0;
-  animation: obra-recado 6.9s steps(1) infinite;
-}
-
-/* ==================================================================
-   Hero — o que espera a entrada.
-
-   Os invólucros marcados com `data-intro` começam escondidos, e a
-   entrada (`HeroCena`) mostra peça por peça. Rede de segurança: se o
-   JavaScript não chegar, eles aparecem sozinhos em 3,5 s. Com movimento
-   reduzido não há entrada, e nada se esconde.
-   ================================================================== */
-@keyframes rede-de-seguranca {
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  [data-intro] {
-    opacity: 0;
-    animation: rede-de-seguranca 0s 3.5s forwards;
-  }
-}
-
-/* ==================================================================
-   Processo — o caminho de pontos de salvamento (`CaminhoSalvo`).
-   ================================================================== */
-.etapa__no,
-.etapa__alma {
-  position: absolute;
-  top: 1.85rem;
-  left: 0;
-  width: 7px;
-  height: 7px;
-}
-
-.etapa__no {
-  rotate: 45deg;
-  background: var(--color-camada);
-  border: 1px solid var(--color-borda-viva);
-}
-
-/* Salvo: o losango acende e fica aceso. */
-.etapa[data-salvo] .etapa__no {
-  background: var(--color-determinacao);
-  border-color: var(--color-determinacao);
-}
-
-/* Em leitura: o coração toma o lugar do losango. */
-.etapa__alma {
-  top: calc(1.85rem - 2px);
-  left: -2px;
-  width: 12px;
-  height: 10px;
-  opacity: 0;
-}
-
-.etapa[data-selecionada] .etapa__alma {
+.palco-3d.pronto {
   opacity: 1;
 }
-
-.etapa[data-selecionada] .etapa__no {
-  opacity: 0;
+.sem-webgl .palco-3d {
+  display: none;
 }
 
-/* O laço de volta: um "⊂" com três bordas, revelado de baixo para cima
-   pela rolagem em degraus, no sentido da própria volta. Fora do
-   `@supports`, a volta aparece inteira. */
-.ciclo-volta {
-  border-top: 1px solid var(--color-borda-viva);
-  border-bottom: 1px solid var(--color-borda-viva);
-  border-left: 1px solid var(--color-borda-viva);
-  border-right: 0;
-  border-radius: 0.85rem 0 0 0.85rem;
-  clip-path: inset(0 0 0 0);
+/* ------------------------------------------------------------------
+   Botões. O principal é vácuo sobre vermelho (5,63:1); o de linha é
+   instrumento, com contorno de atmosfera.
+   ------------------------------------------------------------------ */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0 1.35rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.botao--acao {
+  background: var(--color-determinacao);
+  color: var(--color-vacuo);
+}
+.botao--acao:hover {
+  background: #ff6b6b;
+}
+.botao--linha {
+  background: transparent;
+  color: var(--color-luz);
+  border-color: var(--color-traco);
+}
+.botao--linha:hover {
+  border-color: var(--color-atmosfera);
+  color: var(--color-atmosfera);
+}
+.botao--compacto {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 0.86rem;
 }
 
-@keyframes desenhar-volta {
+/* `Button` do formulário e das páginas de erro. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.btn--determinacao {
+  background: var(--color-determinacao);
+  color: var(--color-vacuo);
+}
+.btn--determinacao:hover {
+  background: #ff6b6b;
+}
+.btn--contorno {
+  border-color: var(--color-traco);
+  color: var(--color-luz);
+}
+.btn--contorno:hover {
+  border-color: var(--color-atmosfera);
+  color: var(--color-atmosfera);
+}
+.btn--fantasma {
+  color: var(--color-luz);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+.estado {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--color-atmosfera);
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------
+   Cabeçalho e menu
+   ------------------------------------------------------------------ */
+.cabecalho {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  height: 4.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0 clamp(1rem, 3.5vw, 2.5rem);
+  font-family: var(--font-display);
+  background: rgb(5 9 19 / calc(var(--plasma, 0) * 0.9));
+}
+.cabecalho__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+}
+.cabecalho__nav {
+  margin-left: auto;
+}
+.cabecalho__nav ul {
+  display: flex;
+  gap: 1.75rem;
+}
+.cabecalho__nav a {
+  font-size: 0.9rem;
+  color: var(--color-poeira);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.cabecalho__nav a:hover {
+  color: var(--color-luz);
+}
+.cabecalho__abrir {
+  display: none;
+  margin-left: auto;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-luz);
+  border: 1px solid var(--color-traco);
+  border-radius: 2px;
+  background: rgb(5 9 19 / 0.6);
+}
+@media (max-width: 900px) {
+  .cabecalho__nav {
+    display: none;
+  }
+  .cabecalho__abrir {
+    display: inline-flex;
+    align-items: center;
+  }
+  .cabecalho__cta {
+    margin-left: auto;
+  }
+  .cabecalho__abrir {
+    margin-left: 0.6rem;
+  }
+}
+@media (max-width: 520px) {
+  .cabecalho__cta {
+    display: none;
+  }
+  .cabecalho__abrir {
+    margin-left: auto;
+  }
+}
+
+.menu {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 5.5rem clamp(1.25rem, 6vw, 3rem) 3rem;
+  background: var(--color-vacuo);
+  color: var(--color-luz);
+  border: 0;
+}
+.menu[open] {
+  display: flex;
+  flex-direction: column;
+  animation: menu-entra 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.menu ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 2.5rem;
+}
+.menu ul a {
+  display: block;
+  padding: 0.35rem 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 9vw, 3rem);
+  line-height: 1.1;
+  text-decoration: none;
+}
+.menu__fechar {
+  position: absolute;
+  top: 1rem;
+  right: clamp(1rem, 4vw, 2.5rem);
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-luz);
+  border: 1px solid var(--color-traco);
+  border-radius: 2px;
+}
+@keyframes menu-entra {
   from {
-    clip-path: inset(100% 0 0 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .ciclo-volta {
-      animation: desenhar-volta steps(10) both;
-      animation-timeline: view();
-      animation-range: entry 55% cover 42%;
-    }
-  }
-}
-
-/* ==================================================================
-   Perguntas — a resposta abre em degraus, de cima para baixo, quando a
-   pessoa abre a pergunta. Movimento que responde a um clique.
-   ================================================================== */
-@keyframes resposta-abre {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  details[open] > .resposta {
-    animation: resposta-abre 0.3s steps(6) both;
+    transform: translateX(100%);
   }
 }
 
 /* ------------------------------------------------------------------
-   Deslize — carrossel horizontal nativo, só no celular.
+   A missão.
 
-   Rolagem do próprio navegador com encaixe (`scroll-snap`), sem
-   JavaScript: o dedo já sabe usar, e com movimento reduzido não há nada
-   a desligar. A faixa sangra até a borda da tela e cada card ocupa 82%
-   dela, para a ponta do próximo aparecer. Fora do celular a classe não
-   faz nada.
+   Base = modo linear: as cenas são blocos empilhados, sem palco. O modo
+   cinema (`html.js:not(.linear)`) põe o palco sticky e as cenas umas sobre
+   as outras, movidas pelas variáveis que o roteiro escreve:
+     --d  posição relativa à cena, de -1 (vindo) a 1 (indo)
+     --q  a mesma posição com gravidade (posição ∝ tempo²)
+     --o  opacidade
+     --k  ordem da peça dentro do cartão (as de trás atrasam)
    ------------------------------------------------------------------ */
-@media (max-width: 47.99rem) {
-  .deslize {
-    display: flex;
-    gap: 0.75rem;
-    margin-inline: -1.5rem;
-    padding-inline: 1.5rem;
-    padding-bottom: 0.25rem;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 1.5rem;
-    scrollbar-width: none;
-  }
+.missao {
+  position: relative;
+}
+.cena {
+  position: relative;
+  display: flex;
+  padding: 16vh clamp(1.25rem, 6vw, 4rem);
+}
+.cena[data-lado="dir"] {
+  justify-content: flex-end;
+}
+.cena[data-lado="centro"] {
+  justify-content: center;
+  text-align: center;
+}
+.cartao {
+  position: relative;
+  width: min(36rem, 100%);
+}
+.cena[data-lado="centro"] .cartao {
+  width: min(52rem, 100%);
+}
+.cena[data-lado="centro"] .acoes {
+  justify-content: center;
+}
 
-  .deslize::-webkit-scrollbar {
-    display: none;
-  }
+.linear .missao,
+html:not(.js) .missao {
+  background: rgb(5 9 19 / 0.78);
+}
+.cena:first-child {
+  padding-top: calc(4.5rem + 14vh);
+}
 
-  .deslize > * {
-    flex: 0 0 82%;
-    scroll-snap-align: start;
+html.js:not(.linear) .missao {
+  height: calc(var(--total) * 1svh);
+}
+html.js:not(.linear) .palco {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+html.js:not(.linear) .cena {
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  padding: calc(4.5rem + 3vh) clamp(1.5rem, 7vw, 6rem) 6vh;
+  pointer-events: none;
+}
+html.js:not(.linear) .cena .cartao {
+  opacity: var(--o);
+  pointer-events: auto;
+  will-change: transform, opacity;
+}
+html.js:not(.linear) .cena[data-fora] .cartao {
+  pointer-events: none;
+}
+html.js:not(.linear) .cena[data-lado="esq"] .cartao,
+html.js:not(.linear) .cena[data-lado="dir"] .cartao {
+  width: min(34rem, 42vw);
+}
+
+/* Lateral: o cartão chega de um lado e sai pelo outro, no sentido da
+   viagem da câmera; as peças de trás atrasam e se separam. */
+html.js:not(.linear) [data-entrada="lateral"] .cartao {
+  transform: translate3d(calc(var(--d) * -36vw), 0, 0);
+}
+html.js:not(.linear) [data-entrada="lateral"] .cartao > * {
+  transform: translate3d(calc(var(--d) * var(--k, 0) * -6vw), 0, 0);
+}
+/* Queda: chega do alto acelerando e sai caindo. */
+html.js:not(.linear) [data-entrada="queda"] .cartao {
+  transform: translate3d(0, calc(var(--q) * 72svh), 0);
+}
+html.js:not(.linear) [data-entrada="queda"] .cartao > * {
+  transform: translate3d(0, calc(var(--q) * var(--k, 0) * 10svh), 0);
+}
+/* Órbita: o cartão gira em volta de um pivô fora da tela, à esquerda, como
+   um corpo entrando em órbita. */
+html.js:not(.linear) [data-entrada="orbita"] .cartao {
+  transform-origin: -70vw 50%;
+  transform: rotate(calc(var(--d) * -22deg));
+}
+html.js:not(.linear) [data-entrada="orbita"] .cartao > * {
+  transform: translate3d(calc(var(--d) * var(--k, 0) * -4vw), 0, 0);
+}
+
+/* No pouso o céu é claro no horizonte: ali o texto ganha painel. */
+html.js:not(.linear) .cena[data-ato="Solo"] .cartao {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  background: rgb(12 20 36 / 0.92);
+  border: 1px solid var(--color-borda-viva);
+}
+
+/* ------------------------------------------------------------------
+   Peças dos cartões
+   ------------------------------------------------------------------ */
+.marca-titulo {
+  width: min(44rem, 100%);
+  margin: 0 0 1.4rem;
+  color: var(--color-luz);
+}
+.slogan {
+  font-family: var(--font-sans);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.45rem, 1rem + 1.6vw, 2.25rem);
+  line-height: 1.2;
+  color: var(--color-luz);
+}
+.texto {
+  margin-top: 1rem;
+  max-width: 54ch;
+  color: var(--color-poeira);
+}
+.cena[data-lado="centro"] .texto {
+  margin-inline: auto;
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.8rem;
+}
+.dica {
+  margin-top: 2.4rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--color-atmosfera);
+}
+.dica::before {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 1.6rem;
+  margin-right: 0.8rem;
+  vertical-align: middle;
+  background: var(--color-atmosfera);
+  transform-origin: top;
+  animation: dica-cai 2.2s cubic-bezier(0.55, 0, 1, 0.45) infinite;
+}
+@keyframes dica-cai {
+  0% {
+    transform: scaleY(0);
+  }
+  60% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
   }
 }
 
-/* ==================================================================
-   Manifesto em palco — a caixa de fala (`ManifestoCena`).
+.titulo-cena {
+  font-weight: 700;
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+.titulo-cena--grande {
+  font-size: clamp(2.2rem, 1.2rem + 4vw, 4.8rem);
+}
+.titulo-cena--menor {
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2.1rem);
+  margin-bottom: 1.2rem;
+  color: var(--color-atmosfera);
+}
+.titulo-cena[data-acento="sistema"] {
+  color: var(--color-atmosfera);
+}
+.promessa {
+  margin-top: 1rem;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: clamp(1.25rem, 1rem + 0.9vw, 1.7rem);
+  line-height: 1.3;
+  color: var(--color-luz);
+}
 
-   O HTML da seção é a lista de sempre, e é ela que aparece sem
-   JavaScript, com movimento reduzido e no papel. A classe
-   `manifesto--palco` só entra quando a coreografia vai rodar: título e
-   progresso à esquerda, e os pares empilhados na mesma célula da grade à
-   direita, um sobre o outro. Tudo dentro de `@media screen`.
-   ================================================================== */
-.manifesto__progresso,
-.manifesto__voz,
-.manifesto__fecho-marca {
+.sinais {
+  margin-top: 1.6rem;
+  display: grid;
+  gap: 1.1rem;
+}
+.sinais li {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-borda-viva);
+}
+.sinais h3 {
+  font-weight: 600;
+  font-size: 1.12rem;
+  line-height: 1.3;
+}
+.sinais p {
+  margin-top: 0.3rem;
+  font-size: 0.98rem;
+  color: var(--color-poeira);
+}
+
+.entregas {
+  margin-top: 1.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--color-atmosfera);
+}
+.entregas li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.entregas li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* O manifesto na reentrada: legenda de filme no meio da tela. */
+.par__generico {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  color: #c9d3ea;
+  text-decoration: line-through;
+  text-decoration-color: var(--color-plasma);
+  text-decoration-thickness: 2px;
+}
+.par__especifico {
+  margin-top: 1rem;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: clamp(1.5rem, 1rem + 1.9vw, 2.6rem);
+  line-height: 1.22;
+  color: var(--color-luz);
+  text-shadow: 0 2px 24px rgb(5 9 19 / 0.65);
+}
+.par__especifico--fecho {
+  font-style: italic;
+  font-size: clamp(1.7rem, 1rem + 2.6vw, 3.2rem);
+}
+.par__simbolo {
+  display: block;
+  width: 1.5rem;
+  height: auto;
+  margin: 0 auto 0.9rem;
+  color: var(--color-luz);
+}
+
+.projeto__foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  object-fit: cover;
+  border: 1px solid var(--color-borda-viva);
+}
+.projeto__corpo {
+  margin-top: 1.1rem;
+}
+.projeto h3 {
+  font-weight: 700;
+  font-size: clamp(1.35rem, 1rem + 1vw, 1.8rem);
+  line-height: 1.15;
+}
+.projeto__setor {
+  margin-top: 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  color: var(--color-atmosfera);
+}
+.notas {
+  margin-top: 1rem;
+}
+.notas dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.notas dt {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  line-height: 1.25;
+  color: var(--color-poeira);
+}
+.notas dd {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.notas p {
+  margin-top: 0.4rem;
+  font-size: 0.84rem;
+  color: var(--color-poeira);
+}
+.notas a,
+.obras a {
+  color: var(--color-atmosfera);
+  text-underline-offset: 4px;
+}
+
+.obras {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 1.2rem;
+}
+.obras li {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-borda-viva);
+}
+.obras h3 {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.obras p:not(.projeto__setor) {
+  margin-top: 0.35rem;
+  font-size: 0.96rem;
+  color: var(--color-poeira);
+}
+.obras a {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+}
+
+.etapa__numero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(4rem, 2rem + 6vw, 8rem);
+  line-height: 0.9;
+  color: var(--color-determinacao);
+  font-variant-numeric: tabular-nums;
+}
+.etapa__titulo {
+  margin-top: 0.6rem;
+  font-weight: 700;
+  font-size: clamp(1.7rem, 1.2rem + 1.8vw, 2.7rem);
+  line-height: 1.05;
+}
+.etapa__laco {
+  margin-top: 1.2rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--color-atmosfera);
+}
+
+.assinatura {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+}
+.assinatura__simbolo {
+  width: 1.1rem;
+  height: auto;
+  color: var(--color-luz);
+}
+
+/* ------------------------------------------------------------------
+   Chegada: as letras do nome caem com gravidade, quicam duas vezes no
+   chão e assentam; o resto do primeiro cartão se acende em varredura
+   lateral logo depois.
+   ------------------------------------------------------------------ */
+html.js:not(.linear) .letra-cai {
+  transform-box: fill-box;
+  animation: letra-cai 1.5s both;
+  animation-delay: calc(1.25s + var(--i) * 0.09s);
+}
+@keyframes letra-cai {
+  0% {
+    transform: translateY(-160%);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  8% {
+    opacity: 1;
+  }
+  64% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  76% {
+    transform: translateY(-9%);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  86% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  93% {
+    transform: translateY(-2%);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+html.js:not(.linear) .cena[data-cena="0"] .cartao > :not(.marca-titulo) {
+  animation: varre 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(2.3s + var(--k, 0) * 0.14s);
+}
+@keyframes varre {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+html.js:not(.linear) .cabecalho {
+  animation: acende 1.2s ease 2.6s both;
+}
+@keyframes acende {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Instrumentos
+   ------------------------------------------------------------------ */
+.trajetoria,
+.altimetro,
+.etiquetas {
   display: none;
 }
-
-/* A página parada no fim do manifesto enquanto a fala termina. Só em tela de
-   toque: ali um arrasto já em curso não pode ser cancelado por JavaScript, e
-   sem isto a seção tremia entre o dedo e a correção. No desktop, esconder a
-   barra de rolagem mudaria a largura da página e recalcularia todos os
-   trechos fixados; lá a roda é segurada pelo Lenis. */
-@media (pointer: coarse) {
-  html.rolagem-retida {
-    overflow: hidden;
+html[data-depois] .trajetoria {
+  opacity: 0;
+  visibility: hidden;
+}
+.trajetoria {
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s;
+}
+html.js:not(.linear) .trajetoria {
+  --trilha: 44svh;
+  position: fixed;
+  left: clamp(1rem, 2vw, 1.75rem);
+  top: calc(50% - var(--trilha) / 2);
+  z-index: 30;
+  display: block;
+  width: 1.5rem;
+  height: var(--trilha);
+  font-family: var(--font-display);
+}
+.trajetoria::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-traco);
+}
+.trajetoria li {
+  position: absolute;
+  left: 0;
+  top: calc(var(--p) * 100%);
+  transform: translateY(-50%);
+}
+.trajetoria a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 1.75rem;
+  padding-left: 0;
+  font-size: 0.74rem;
+  color: var(--color-poeira);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.trajetoria a::before {
+  content: "";
+  width: 7px;
+  height: 1px;
+  background: var(--color-poeira);
+}
+/* Os nomes dos atos ficam escondidos e aparecem com a trilha sob o cursor
+   ou no foco; à vista, eles encostavam nos cartões do lado esquerdo. O ato
+   atual fica sempre aceso. */
+.trajetoria a span {
+  opacity: 0;
+  transform: translateX(-0.4rem);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.trajetoria:hover a span,
+.trajetoria:focus-within a span,
+.trajetoria a[aria-current] span {
+  opacity: 1;
+  transform: none;
+}
+.trajetoria a[aria-current] {
+  color: var(--color-luz);
+}
+.trajetoria a:hover,
+.trajetoria a:focus-visible {
+  color: var(--color-luz);
+}
+.trajetoria__marcador {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-determinacao);
+  box-shadow: 0 0 0 3px rgb(255 59 59 / 0.22);
+}
+@media (max-width: 1100px) {
+  html.js:not(.linear) .trajetoria {
+    display: none;
+  }
+}
+/* Com a trilha à vista, o cartão da esquerda abre espaço para o nome do ato. */
+@media (min-width: 1101px) {
+  html.js:not(.linear) .cena[data-lado="esq"] {
+    padding-left: max(7vw, 10rem);
   }
 }
 
-@media screen {
-  .manifesto--palco {
-    display: flex;
-    align-items: center;
-    height: 100svh;
-    padding-top: 4.5rem;
-    padding-bottom: 1.5rem;
+html.js:not(.linear) .altimetro {
+  position: fixed;
+  right: clamp(1rem, 2.5vw, 2.25rem);
+  top: 50%;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 0.9rem;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  color: var(--color-atmosfera);
+  visibility: hidden;
+  opacity: 0;
+}
+.altimetro__rotulo {
+  grid-column: 1;
+  font-size: 0.74rem;
+  color: var(--color-poeira);
+}
+.altimetro__leitura {
+  grid-column: 1;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-align: right;
+}
+.altimetro[data-alerta] .altimetro__leitura {
+  color: var(--color-plasma);
+}
+.altimetro__janela {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 1.4rem;
+  height: 9rem;
+  overflow: hidden;
+  border-left: 1px solid var(--color-traco);
+  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
+}
+.altimetro__fita {
+  height: 200%;
+  margin-top: -50%;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-atmosfera) 0 1px,
+    transparent 1px 16px
+  );
+  width: 0.7rem;
+}
+@media (max-width: 760px) {
+  html.js:not(.linear) .altimetro {
+    top: 5.6rem;
+    transform: none;
   }
-
-  .manifesto--palco .manifesto__grade {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: center;
-    gap: 2rem;
+  .altimetro__janela {
+    height: 4rem;
   }
-
-  @media (min-width: 48rem) {
-    .manifesto--palco .manifesto__grade {
-      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
-      align-items: center;
-      gap: 4rem;
-    }
+  .altimetro__leitura {
+    font-size: 1.2rem;
   }
+}
 
-  @media (min-width: 64rem) {
-    .manifesto--palco .manifesto__grade {
-      gap: 6rem;
-    }
+html.js:not(.linear) .etiquetas {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: block;
+  pointer-events: none;
+}
+.etiquetas__linhas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.etiquetas__linhas line {
+  stroke: var(--color-atmosfera);
+  stroke-width: 1;
+}
+.etiqueta {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.2rem 0;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--color-luz);
+  text-decoration: none;
+  white-space: nowrap;
+  pointer-events: auto;
+  border-bottom: 1px solid var(--color-atmosfera);
+}
+.etiqueta[data-acento="sistema"] {
+  color: var(--color-atmosfera);
+}
+@media (max-width: 760px) {
+  html.js:not(.linear) .etiquetas {
+    display: none;
   }
+}
 
-  /* No celular o título sobe e a frase de apoio sai: o que tem que caber
-     na tela é a fala. */
-  @media (max-width: 47.99rem) {
-    .manifesto--palco .manifesto__lead {
-      display: none;
-    }
+/* ------------------------------------------------------------------
+   Dossiê: entra pela direita, como um painel lateral da cabine.
+   ------------------------------------------------------------------ */
+.dossie {
+  margin: 0 0 0 auto;
+  width: min(42rem, 100vw);
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  padding: 0;
+  background: var(--color-painel);
+  color: var(--color-luz);
+  border: 0;
+  border-left: 1px solid var(--color-borda-viva);
+  text-align: left;
+}
+.dossie[open] {
+  animation: dossie-entra 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dossie::backdrop {
+  background: rgb(5 9 19 / 0.72);
+}
+@keyframes dossie-entra {
+  from {
+    transform: translateX(100%);
   }
+}
+.dossie__caixa {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.dossie__topo {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1.25rem, 4vw, 2.5rem);
+  background: var(--color-painel);
+  border-bottom: 1px solid var(--color-borda);
+}
+.dossie__titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.dossie__fechar {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  border: 1px solid var(--color-traco);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.dossie__fechar:hover {
+  border-color: var(--color-atmosfera);
+}
+.dossie__corpo {
+  padding: 1.6rem clamp(1.25rem, 4vw, 2.5rem) 3rem;
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+.dossie__corpo p {
+  color: var(--color-poeira);
+}
+.dossie__corpo .dossie__lead {
+  font-weight: 300;
+  font-size: 1.3rem;
+  line-height: 1.35;
+  color: var(--color-luz);
+}
+.dossie__corpo h4 {
+  margin-top: 0.6rem;
+  font-size: 1.05rem;
+  color: var(--color-atmosfera);
+}
+.dossie__lista {
+  display: grid;
+  gap: 1.1rem;
+  margin: 0.4rem 0 1rem;
+}
+.dossie__lista dt {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.dossie__lista dd {
+  margin-top: 0.15rem;
+  color: var(--color-poeira);
+}
+.dossie__marcadores {
+  display: grid;
+  gap: 0.6rem;
+  padding-left: 1.1rem;
+  list-style: disc;
+  color: var(--color-poeira);
+}
+.dossie__marcadores li::marker {
+  color: var(--color-determinacao);
+}
+.dossie__stack {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+}
 
-  .manifesto--palco .manifesto__progresso {
-    display: flex;
-    gap: 0.9rem;
-    margin-top: 1.75rem;
-    padding-left: 2px;
+/* ------------------------------------------------------------------
+   Depois da missão: perguntas e contato.
+   ------------------------------------------------------------------ */
+.secao {
+  position: relative;
+  padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 6vw, 4rem);
+  background: rgb(5 9 19 / 0.86);
+}
+.secao + .secao {
+  border-top: 1px solid var(--color-borda);
+}
+.secao__miolo {
+  max-width: 76rem;
+  margin: 0 auto;
+}
+.secao__miolo--dupla {
+  display: grid;
+  gap: 3rem;
+}
+@media (min-width: 900px) {
+  .secao__miolo--dupla {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 5rem;
   }
+}
+.perguntas details {
+  border-top: 1px solid var(--color-borda-viva);
+}
+.perguntas details:last-child {
+  border-bottom: 1px solid var(--color-borda-viva);
+}
+.perguntas summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.08rem;
+  cursor: pointer;
+  list-style: none;
+}
+.perguntas summary::-webkit-details-marker {
+  display: none;
+}
+.perguntas summary::after {
+  content: "+";
+  font-weight: 400;
+  color: var(--color-atmosfera);
+}
+.perguntas details[open] summary::after {
+  content: "−";
+}
+.perguntas details p {
+  padding-bottom: 1.3rem;
+  max-width: 62ch;
+  color: var(--color-poeira);
+}
+.perguntas details[open] p {
+  animation: varre 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
 
-  .manifesto--palco .manifesto__palco {
-    display: grid;
+.canais {
+  margin-top: 2rem;
+}
+.canais li {
+  border-bottom: 1px solid var(--color-borda);
+}
+.canais a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  text-decoration: none;
+}
+.canais__icone {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--color-determinacao);
+}
+.canais__rotulo {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  word-break: break-all;
+}
+.canais__descricao {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--color-poeira);
+}
+.nota {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--color-poeira);
+}
+.painel {
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  background: var(--color-painel);
+  border: 1px solid var(--color-borda-viva);
+}
+.painel h3 {
+  font-size: 1.3rem;
+}
+.painel .nota {
+  margin: 0.4rem 0 1.6rem;
+}
+
+/* Formulário */
+.campo {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  color: var(--color-luz);
+  background: var(--color-vacuo);
+  border: 1px solid var(--color-contorno);
+  border-radius: 2px;
+}
+.campo:focus {
+  outline: 2px solid var(--color-atmosfera);
+  outline-offset: 1px;
+}
+.campo[aria-invalid="true"] {
+  border-color: var(--color-determinacao);
+}
+.campo-grupo label {
+  font-family: var(--font-display);
+}
+
+/* ------------------------------------------------------------------
+   Rodapé
+   ------------------------------------------------------------------ */
+.rodape {
+  position: relative;
+  background: var(--color-vacuo);
+  border-top: 1px solid var(--color-borda);
+  padding: 4rem clamp(1.25rem, 6vw, 4rem) 2rem;
+}
+.rodape__miolo {
+  max-width: 88rem;
+  margin: 0 auto;
+}
+.rodape__nome {
+  display: block;
+  color: var(--color-luz);
+}
+.rodape__grade {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+@media (min-width: 900px) {
+  .rodape__grade {
+    grid-template-columns: 1.4fr 1fr auto;
+    align-items: start;
   }
+}
+.rodape__grade .promessa {
+  margin-top: 0;
+  font-style: italic;
+}
+.rodape nav ul {
+  display: grid;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+}
+.rodape nav a {
+  color: var(--color-poeira);
+  text-decoration: none;
+}
+.rodape nav a:hover {
+  color: var(--color-luz);
+}
+.rodape__redes {
+  display: flex;
+  gap: 0.6rem;
+}
+.rodape__redes a {
+  display: flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-poeira);
+  border: 1px solid var(--color-traco);
+  border-radius: 2px;
+}
+.rodape__redes a:hover {
+  color: var(--color-luz);
+  border-color: var(--color-atmosfera);
+}
+.rodape__linha {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-borda);
+  font-size: 0.88rem;
+  color: var(--color-poeira);
+}
+.rodape__linha a {
+  color: var(--color-luz);
+  text-underline-offset: 4px;
+}
 
-  .manifesto--palco .manifesto__pares,
-  .manifesto--palco .manifesto__fecho {
-    grid-area: 1 / 1;
-    align-self: center;
-    margin: 0;
+/* ------------------------------------------------------------------
+   Celular e tela em pé: o objeto sobe (a cena faz isso pelo
+   enquadramento) e o cartão fica embaixo, em painel, com o essencial.
+   ------------------------------------------------------------------ */
+@media (max-width: 760px), (max-aspect-ratio: 4/5) {
+  html.js:not(.linear) .cena {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 5rem 1rem max(1rem, env(safe-area-inset-bottom));
+    text-align: left;
   }
-
-  .manifesto--palco .manifesto__pares {
-    display: grid;
+  html.js:not(.linear) .cena .cartao,
+  html.js:not(.linear) .cena[data-lado="esq"] .cartao,
+  html.js:not(.linear) .cena[data-lado="dir"] .cartao,
+  html.js:not(.linear) .cena[data-lado="centro"] .cartao {
+    width: 100%;
+    max-height: calc(100svh - 6rem);
+    padding: 1.25rem;
+    background: rgb(12 20 36 / 0.9);
+    border: 1px solid var(--color-borda-viva);
   }
-
-  .manifesto--palco .manifesto__par {
-    grid-area: 1 / 1;
-    align-self: center;
-    display: block;
+  html.js:not(.linear) .cena[data-cena="0"] .cartao {
+    background: none;
     border: 0;
-    padding: 0;
+    padding: 0 0.25rem 1rem;
   }
-
-  /* A ideia genérica: a linha de cima, em cinza, como o nome de quem vai
-     ouvir a resposta. */
-  .manifesto--palco .manifesto__generico {
-    font-size: clamp(1.2rem, 0.95rem + 1.2vw, 1.9rem);
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--color-texto-fraco);
+  html.js:not(.linear) .cena[data-lado="centro"] .acoes {
+    justify-content: flex-start;
   }
-
-  /* A fala: a frase específica, grande e clara, com o coração vermelho de
-     quem fala na frente. */
-  .manifesto--palco .manifesto__especifico {
-    position: relative;
-    max-width: 36ch;
-    margin-top: 1.4rem;
-    padding-left: 1.7em;
-    font-family: var(--font-display);
-    font-size: clamp(1.2rem, 0.9rem + 1.25vw, 2rem);
-    font-weight: 500;
-    line-height: 1.38;
-    letter-spacing: -0.01em;
-    color: var(--color-texto);
+  html.js:not(.linear) [data-entrada="lateral"] .cartao {
+    transform: translate3d(calc(var(--d) * -70vw), 0, 0);
   }
-
-  .manifesto--palco .manifesto__voz {
-    display: block;
-    position: absolute;
-    left: 0;
-    top: calc(0.69em - 0.4em);
-    width: 0.96em;
-    height: 0.8em;
-    background-color: var(--color-determinacao);
-    -webkit-mask: var(--alma) center / contain no-repeat;
-    mask: var(--alma) center / contain no-repeat;
+  html.js:not(.linear) [data-entrada="orbita"] .cartao {
+    transform-origin: 50% 240%;
   }
-
-  .manifesto--palco .manifesto__fecho-marca {
-    display: inline-block;
-    margin-bottom: 1.5rem;
+  .texto--opcional,
+  html.js:not(.linear) .sinais p,
+  html.js:not(.linear) .projeto .texto {
+    display: none;
   }
-
-  .manifesto--palco .manifesto__fecho p {
-    max-width: 24ch;
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--color-texto);
+  html.js:not(.linear) .sinais {
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+  html.js:not(.linear) .sinais li {
+    padding-top: 0.6rem;
+  }
+  .par__simbolo {
+    margin-left: 0;
+  }
+  .projeto__foto {
+    aspect-ratio: 16 / 7;
+  }
+  .notas dd {
+    font-size: 1.35rem;
+  }
+  .notas dt {
+    font-size: 0.66rem;
+  }
+  .etapa__numero {
+    font-size: 3.4rem;
+  }
+  .dica {
+    display: none;
+  }
+}
+@media (max-height: 760px) and (min-width: 761px) {
+  html.js:not(.linear) .sinais p,
+  html.js:not(.linear) .texto--opcional {
+    display: none;
+  }
+  .projeto__foto {
+    aspect-ratio: 16 / 6;
   }
 }
 
-/*
-  Na impressão não existe rolagem nem céu. O que a coreografia deixou com
-  estilo em linha no momento de imprimir (letras apagadas, pares fora do
-  palco, blocos cobrindo prints) volta ao estado final.
-*/
-@media print {
-  [data-intro],
-  [data-entra],
-  [data-letra-desfaz],
-  [data-letra-entra],
-  [data-hero-resto],
-  [data-fala-letra],
-  [data-par],
-  [data-fecho],
-  [data-bloco],
-  [data-desenhar],
-  .ciclo-volta {
-    animation: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-  }
-
-  .ciclo-volta {
-    clip-path: none !important;
-  }
-
-  [data-fala] {
-    --fala: 100000 !important;
-    --resto: 100000 !important;
-  }
-
-  .ceu-vivo,
-  .travessia,
-  .montagem,
-  .grade-menu,
-  .alma {
-    display: none !important;
-  }
-
-  .previa-slide {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-
-  .previa-slide ~ .previa-slide {
-    display: none !important;
-  }
-}
-
+/* ------------------------------------------------------------------
+   Movimento reduzido: a página nem entra no modo cinema (o script do
+   `<head>` decide), e o que sobra de animação para.
+   ------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .palco-3d,
+  .cabecalho,
+  .trajetoria,
+  .altimetro,
+  .etiquetas,
+  .acoes {
+    display: none !important;
+  }
+  .missao {
+    height: auto !important;
+  }
+  .palco {
+    position: static !important;
+    height: auto !important;
+  }
+  .cena {
+    position: static !important;
+    display: block !important;
+    padding: 1.5rem 0 !important;
+  }
+  .cartao,
+  .cartao > * {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

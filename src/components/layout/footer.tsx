@@ -1,11 +1,5 @@
-import { Wordmark } from "@/components/brand/wordmark";
-import { Container } from "@/components/ui/container";
-import {
-  IconeEmail,
-  IconeGithub,
-  IconeLinkedin,
-  IconeWhatsapp,
-} from "@/components/ui/icones";
+import { Letreiro } from "@/components/brand/wordmark";
+import { IconeEmail, IconeGithub, IconeLinkedin, IconeWhatsapp } from "@/components/ui/icones";
 import { navLinks } from "@/config/nav";
 import { site } from "@/config/site";
 import { whatsappUrl } from "@/lib/utils/whatsapp";
@@ -21,105 +15,59 @@ const redes = [
   { href: site.contact.github, rotulo: "GitHub", Icone: IconeGithub },
 ];
 
+/**
+ * O fim da página, quieto: o nome grande, os destinos e os canais. O ano é
+ * fixo no texto, e não `new Date()`: a página é pré-renderizada e uma data
+ * calculada no servidor ficaria congelada no dia do build de qualquer jeito.
+ */
 export function Footer() {
   return (
-    // Transparente sobre o céu (`CeuVivo`), com a densidade mais baixa da
-    // página: o fim do site é quieto.
-    <footer data-ceu={0.25} className="border-borda relative border-t">
-      {/* Último trecho da trilha: some por fade em vez de bater num terminal. */}
-      <span aria-hidden="true" className="trilha trilha--fim" />
+    <footer className="rodape">
+      <div className="rodape__miolo">
+        <a href="#topo" className="rodape__nome" aria-label={`${site.name}, voltar ao início`}>
+          <Letreiro className="w-full" />
+        </a>
 
-      <Container className="py-16 md:py-20">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
-          <div>
-            <a href="#topo" className="text-texto inline-block">
-              <Wordmark />
-            </a>
-            <p className="font-display text-texto mt-4 text-[1.05rem] font-bold">
-              {site.slogan}
-            </p>
-            <p className="text-texto-suave mt-3 max-w-[34ch] text-[0.92rem] leading-relaxed">
-              {site.tagline} para negócios que querem ter cara própria.
-            </p>
-            <p className="text-texto-fraco mt-4 text-[0.88rem]">{site.local.note}</p>
-          </div>
+        <div className="rodape__grade">
+          <p className="promessa">{site.slogan}</p>
 
           <nav aria-label="Seções do site">
-            <h2 className="text-texto font-display text-[1rem] font-bold">Site</h2>
-            <ul className="mt-4 flex flex-col gap-2.5 text-[0.92rem]">
+            <ul>
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="escolha text-texto-suave">
-                    {link.label}
-                  </a>
+                  <a href={link.href}>{link.label}</a>
                 </li>
               ))}
             </ul>
           </nav>
 
-          <div>
-            <h2 className="text-texto font-display text-[1rem] font-bold">Contato</h2>
-            <ul className="mt-4 flex flex-col gap-2.5 text-[0.92rem]">
-              <li>
+          <ul className="rodape__redes">
+            {redes.map(({ href, rotulo, Icone }) => (
+              <li key={rotulo}>
                 <a
-                  href={whatsappUrl(
-                    "Olá! Vim pelo site da DETERA e quero conversar sobre um projeto.",
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="escolha text-texto-suave"
+                  href={href}
+                  target={href.startsWith("http") ? "_blank" : undefined}
+                  rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  aria-label={rotulo}
                 >
-                  {site.contact.phone}
+                  <Icone className="h-5 w-5" />
                 </a>
               </li>
-              <li>
-                <a
-                  href={`mailto:${site.contact.email}`}
-                  className="escolha text-texto-suave break-all"
-                >
-                  {site.contact.email}
-                </a>
-              </li>
-            </ul>
-
-            <ul className="mt-6 flex gap-2.5">
-              {redes.map(({ href, rotulo, Icone }) => (
-                <li key={rotulo}>
-                  <a
-                    href={href}
-                    target={href.startsWith("http") ? "_blank" : undefined}
-                    rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-                    aria-label={rotulo}
-                    className="border-borda text-texto-suave hover:text-texto flex h-10 w-10 items-center justify-center rounded-[2px] border"
-                  >
-                    <Icone className="h-5 w-5" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+            ))}
+          </ul>
         </div>
 
-        <div className="border-borda mt-14 flex flex-col gap-4 border-t pt-6 text-[0.85rem] md:flex-row md:items-center md:justify-between">
-          <p className="text-texto-fraco">
-            © {new Date().getFullYear()} {site.legalName}. Fundada por{" "}
-            <a
-              href={site.founderPortfolio}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-texto-suave hover:text-texto underline underline-offset-4"
-            >
+        <div className="rodape__linha">
+          <p>
+            © 2026 {site.legalName}. Fundada por{" "}
+            <a href={site.founderPortfolio} target="_blank" rel="noopener noreferrer">
               {site.founder}
             </a>
             .
           </p>
-
-          <p className="text-texto-fraco inline-flex items-center gap-2">
-            <span aria-hidden="true" className="bg-determinacao h-[6px] w-[6px] rotate-45" />
-            {site.local.city}, {site.local.state}
-          </p>
+          <p>{site.local.note}</p>
         </div>
-      </Container>
+      </div>
     </footer>
   );
 }

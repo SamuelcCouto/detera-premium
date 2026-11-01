@@ -1,32 +1,19 @@
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
-import { Cases } from "@/components/sections/cases";
-import { Chamada } from "@/components/sections/chamada";
-import { Contato } from "@/components/sections/contato";
-import { Diagnostico } from "@/components/sections/diagnostico";
-import { Hero } from "@/components/sections/hero";
-import { Perguntas } from "@/components/sections/perguntas";
-import { Personalidade } from "@/components/sections/personalidade";
-import { Processo } from "@/components/sections/processo";
-import { Sobre } from "@/components/sections/sobre";
-import { Solucoes } from "@/components/sections/solucoes";
+import { Missao } from "@/components/missao/missao";
+import { Palco3D } from "@/components/missao/palco-3d";
+import { Contato } from "@/components/secoes/contato";
+import { Perguntas } from "@/components/secoes/perguntas";
 import { EmpresaJsonLd, PerguntasJsonLd } from "@/lib/seo/json-ld";
 
 /**
- * A ordem das seções é o argumento comercial do site, e por isso mora aqui em
- * vez de se espalhar por componentes:
+ * A página é uma missão: chegada ao sistema DETERA, as quatro frentes como
+ * planetas, a reentrada no planeta azul com o manifesto, o pouso onde estão
+ * os projetos, a órbita do processo e o diário de bordo. Depois disso a
+ * página volta a ser página, para as perguntas e o contato.
  *
- *   marca → por que temos cara própria → prova → problema reconhecível →
- *   o que fazemos → como funciona → chamada → quem somos → objeções →
- *   contato
- *
- * O manifesto vem colado no hero (em teste): o slogan acabou de ser dito, e
- * a seção seguinte explica a frase antes de mostrar os projetos. Na ordem
- * anterior ele ficava depois de Soluções, fundo demais para quem só passa
- * os olhos. Se não agradar, a alternativa é logo depois de Cases, mantendo a
- * prova antes de qualquer explicação.
- *
- * Cada bloco responde à pergunta que o anterior deixa em aberto.
+ * O roteiro de cenas está em `src/lib/missao/cenas.ts`; o plano, em
+ * `docs/design-plan.md`.
  */
 export default function Home() {
   return (
@@ -35,17 +22,11 @@ export default function Home() {
         Pular para o conteúdo
       </a>
 
+      <Palco3D />
       <Header />
 
       <main id="conteudo">
-        <Hero />
-        <Personalidade />
-        <Cases />
-        <Diagnostico />
-        <Solucoes />
-        <Processo />
-        <Chamada />
-        <Sobre />
+        <Missao />
         <Perguntas />
         <Contato />
       </main>

@@ -16,7 +16,7 @@ export default function NaoEncontrada() {
   return (
     <main className="bg-vazio flex min-h-screen items-center">
       <Container>
-        <Simbolo className="text-borda-viva h-10 w-8" vivo />
+        <Simbolo className="text-borda-viva h-10 w-8" />
 
         <p className="estado mt-8">Rota inexistente</p>
 

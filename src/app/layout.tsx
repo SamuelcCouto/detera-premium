@@ -2,24 +2,17 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-import { CeuVivo } from "@/components/motion/ceu-vivo";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { isPublicDomain, site } from "@/config/site";
 import "./globals.css";
 
 /**
- * Tipografia: uma família só, Oxanium, do leve ao pesado.
- *
- * Puxa a mesma personalidade do nome desenhado — os cantos chanfrados a
- * 45°, a proporção larga — e ainda assim se lê em parágrafo. Pesada nos
- * títulos, leve e espaçada no slogan e nos rótulos de estado, regular no
- * texto corrido. O próprio "DETERA" não usa fonte nenhuma: é o desenho
- * de `Letreiro`.
- *
- * Carregada por `@font-face` em `globals.css`, servida do próprio
- * `public/fonts`, e não por `next/font`: o carregador do Turbopack não
- * resolve os arquivos da Oxanium neste ambiente. O efeito é o mesmo —
- * woff2 do próprio domínio, sem CDN, sem custo de terceiro.
+ * Tipografia em dois papéis: Oxanium, a fonte da marca, nos títulos, nos
+ * instrumentos e nos botões; Spectral, a voz do narrador da missão, no texto
+ * corrido e nas frases do manifesto. As duas por `@font-face` em
+ * `globals.css`, servidas do próprio `public/fonts`, e não por `next/font`:
+ * o carregador do Turbopack não resolve os arquivos da Oxanium neste
+ * ambiente, e a CSP só aceita fonte do próprio domínio.
  */
 const titulo = `${site.name} — ${site.tagline}`;
 
@@ -69,7 +62,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#07080b",
+  themeColor: "#050913",
   colorScheme: "dark",
 };
 
@@ -88,7 +81,7 @@ const recadoConsole = ((): string => {
 
   const argumentos = [
     texto,
-    "background:#ff3b3b;color:#07080b;font-weight:700;padding:2px 8px;letter-spacing:.18em",
+    "background:#ff3b3b;color:#050913;font-weight:700;padding:2px 8px;letter-spacing:.18em",
     "color:#9ba1ac;padding-left:8px",
     "color:#6b717c",
   ];
@@ -108,14 +101,21 @@ const recadoConsole = ((): string => {
   );
 })();
 
+/**
+ * Decide o modo da página antes da primeira pintura: com movimento reduzido,
+ * tela baixa (até 520 px) ou sem WebGL, a missão vira leitura empilhada
+ * (`linear`). Decidido aqui, e não depois da hidratação, para a página não
+ * abrir num modo e trocar para o outro na frente da pessoa.
+ */
+const decidirModo = `(function(){var h=document.documentElement;h.classList.add("js");var g=false;try{var c=document.createElement("canvas");g=!!(c.getContext("webgl2")||c.getContext("webgl"))}catch(e){}if(!g)h.classList.add("sem-webgl");if(!g||matchMedia("(prefers-reduced-motion: reduce)").matches||innerHeight<=520)h.classList.add("linear")})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        {/* A Oxanium vem por `@font-face` (não por `next/font`, ver
-            `globals.css`), e sem aviso o navegador só a descobre depois de
-            ler o CSS e montar o texto. O hero mede a própria altura com a
-            fonte final para decidir se fixa, e esperava por ela. */}
+        <script dangerouslySetInnerHTML={{ __html: decidirModo }} />
+        {/* As duas fontes que a primeira cena usa: sem aviso, o navegador só as
+            descobre depois de ler o CSS. */}
         <link
           rel="preload"
           href="/fonts/oxanium-latin.woff2"
@@ -123,9 +123,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        <link
+          rel="preload"
+          href="/fonts/spectral-latin-300-italic.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
-      <body className="antialiased">
-        <CeuVivo />
+      <body>
         {children}
         <SmoothScroll />
         <script dangerouslySetInnerHTML={{ __html: recadoConsole }} />

@@ -31,7 +31,7 @@ Cor de cada planeta: Sencis em porcelana e dourado, FIDÈLE gigante rosa com ane
 
 ## Tipografia
 
-- **Oxanium** (marca, regra do projeto): títulos, instrumentos, botões. 500 a 800.
+- **Oxanium** (marca, regra do projeto): títulos, slogan, instrumentos, botões. 300 a 800.
 - **Spectral** (Production Type, OFL, servida de `public/fonts`): a voz do narrador. 300, 400 e 300 itálico.
 
 ## Identidade de movimento
@@ -40,13 +40,15 @@ Cor de cada planeta: Sencis em porcelana e dourado, FIDÈLE gigante rosa com ane
 - **Três adjetivos:** pesado, imersivo, preciso.
 - **Gesto de abertura: o zoom na Via Láctea.** A primeira rolagem desce da galáxia inteira até o sistema solar, em escala logarítmica, com rastro radial, até o Sol do braço virar o núcleo do sistema.
 - **Gesto de fechamento: a reentrada.** A câmera mergulha no planeta azul, as bordas da tela viram plasma, tudo treme, o altímetro despenca e uma única frase cai do alto. As nuvens rasgam e a cena pousa no crepúsculo do contato.
-- **Apoio, só o necessário:** as letras do nome caem ao carregar; a câmera viaja em arco de planeta em planeta, com o cartão entrando de um lado e saindo pelo outro; etiquetas presas aos planetas; o cursor puxa a câmera com mola.
+- **Apoio, só o necessário:** ao carregar, estrelas da galáxia se juntam e o nome acende sólido sobre elas, e no zoom as letras se apagam com as estrelas voando; a câmera viaja em arco de planeta em planeta, com o cartão entrando de um lado e saindo pelo outro; etiquetas presas aos planetas; o cursor puxa a câmera com mola.
 - **O que saiu no enxugamento:** cartões em órbita, trilha de atos, separação em camadas dentro do cartão, relevo correndo de lado, cápsula do processo, rastro por velocidade da rolagem.
 - **O que a marca não faz:** blur, vidro, neon, degradê de enfeite, cortina do centro, fade-and-rise em cada bloco, hover genérico, rótulo em caixa alta, seta no fim do botão.
 
 ## Mecânica
 
 Uma seção `missao` com altura virtual e um palco `sticky` de 100svh. A rolagem vira uma posição fracionária `s` entre cenas (keyframes de estado); uma função só interpola o estado, e os cartões ativos recebem `--d` (posição relativa, de -1 a 1). Um canvas Three.js fixo lê o estado a cada quadro. A Via Láctea é uma cena à parte, com câmera própria, porque as escalas não cabem no mesmo espaço. Sem pin do ScrollTrigger e sem snap.
+
+**Um modelo só para celular e computador.** O celular travava por custo, não por conceito: ruído procedural por pixel a cada quadro e estilo da página recalculado a cada quadro. Com isso resolvido, os dois usam o mesmo roteiro, e o aparelho que não segurar baixa a resolução sozinho.
 
 Conteúdo longo fica em dossiês (`<dialog>`): o caso inteiro com as notas medidas, as entregas, como funciona, quem faz e as perguntas frequentes.
 
@@ -56,10 +58,10 @@ Conteúdo longo fica em dossiês (`<dialog>`): o caso inteiro com as notas medid
 
 | Cena | Câmera | Cartão |
 |---|---|---|
-| `topo` | a Via Láctea inteira | nome, slogan, duas ações |
+| `topo` | a Via Láctea inteira | letreiro de filme: nome e slogan, sem botão (a ação fica no cabeçalho) |
 | `projetos` | o sistema solar, planetas etiquetados | "O que já construímos" |
 | `projeto-sencis`, `projeto-fidele` | um planeta por cena | foto, nome, setor, resumo, abrir o site, ler o caso |
-| `projeto-yasmin`, `projeto-keepnew` | um planeta por cena | nome, setor, resumo, abrir o site |
+| `projeto-yasmin`, `projeto-keepnew` | um planeta por cena | print do site, nome, setor, resumo, abrir o site |
 | `solucoes` | perto do núcleo | as quatro frentes e três dossiês |
 | `seu-projeto` | o planeta azul | "O próximo planeta é o seu" |
 | `reentrada` | dentro da atmosfera, em plasma | uma frase |

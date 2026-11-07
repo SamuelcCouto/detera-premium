@@ -4,7 +4,7 @@ import { Letreiro } from "@/components/brand/wordmark";
 import { Dossie } from "@/components/missao/dossie";
 import { Instrumentos } from "@/components/missao/instrumentos";
 import { Roteiro } from "@/components/missao/roteiro";
-import { cases, type Case } from "@/content/cases";
+import { cases, type Case, type ImagemPrevia } from "@/content/cases";
 import { projetosEmConstrucao, type ProjetoEmConstrucao } from "@/content/em-construcao";
 import { pilares } from "@/content/pilares";
 import { etapas } from "@/content/processo";
@@ -30,7 +30,7 @@ const formatarData = (iso: string) =>
  * das pessoas não chega ao fim de uma página longa, então o que importa (os
  * projetos, o contato) não pode depender de atravessar texto.
  *
- * O primeiro cartão já sai do servidor em cena (`--o: 1`), e os outros fora,
+ * O primeiro cartão já sai do servidor em cena, e os outros com `data-fora`,
  * para a primeira pintura não depender da hidratação.
  */
 export function Missao() {
@@ -69,9 +69,6 @@ export function Missao() {
             data-painel={cena.painel ? "" : undefined}
             data-fora={i === 0 ? undefined : ""}
             className="cena"
-            style={
-              (i === 0 ? { "--d": 0, "--q": 0, "--o": 1 } : { "--d": -1, "--q": -1, "--o": 0 }) as CSSProperties
-            }
           >
             <div className="cartao">{conteudo[cena.id]}</div>
           </div>
@@ -85,31 +82,22 @@ export function Missao() {
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * A abertura é um letreiro de filme, sem botão: as estrelas da cena 3D se juntam
+ * no lugar que este `<h1>` reserva, o nome acende e o slogan aparece. A ação
+ * fica no cabeçalho. O formato anterior (logo à esquerda, slogan em itálico,
+ * dois botões e uma dica de rolagem) foi recusado por ter cara de template.
+ */
 function Topo() {
   return (
     <>
-      <h1 className="marca-titulo">
-        <Letreiro caindo className="w-full" />
+      <h1 className="marca-titulo" data-nome>
+        <Letreiro className="w-full" />
       </h1>
       <p className="slogan" style={k(1)}>
         {site.slogan}
       </p>
-      <div className="acoes" style={k(2)}>
-        <a
-          className="botao botao--acao"
-          href={whatsappUrl("Olá! Vim pelo site da DETERA e quero começar um projeto.")}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Começar um projeto
-        </a>
-        <a className="botao botao--linha" href="#projetos">
-          Ver os projetos
-        </a>
-      </div>
-      <p className="dica" style={k(3)} aria-hidden="true">
-        Role para descer até o sistema solar
-      </p>
+      <span className="dica" style={k(2)} aria-hidden="true" />
     </>
   );
 }
@@ -123,21 +111,26 @@ function Sistema() {
   );
 }
 
+function Foto({ imagem }: { imagem: ImagemPrevia }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- imagem local já otimizada, dentro de um cartão que se move pela rolagem
+    <img
+      className="projeto__foto"
+      src={imagem.url}
+      alt={imagem.alt}
+      style={{ objectPosition: imagem.pos ?? "50% 50%" }}
+      loading="lazy"
+      decoding="async"
+      width={1200}
+      height={600}
+    />
+  );
+}
+
 function Caso({ caso }: { caso: Case }) {
-  const imagem = caso.imagens[0];
   return (
     <article className="projeto" aria-labelledby={`caso-${caso.id}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- foto local já otimizada, dentro de um cartão que se move pela rolagem */}
-      <img
-        className="projeto__foto"
-        src={imagem.url}
-        alt={imagem.alt}
-        style={{ objectPosition: imagem.pos ?? "50% 50%" }}
-        loading="lazy"
-        decoding="async"
-        width={1200}
-        height={600}
-      />
+      <Foto imagem={caso.imagens[0]} />
       <h2 id={`caso-${caso.id}`} className="projeto__nome">
         {caso.cliente}
       </h2>
@@ -197,6 +190,7 @@ function Caso({ caso }: { caso: Case }) {
 function EmObra({ projeto }: { projeto: ProjetoEmConstrucao }) {
   return (
     <article className="projeto" aria-labelledby={`caso-${projeto.id}`}>
+      <Foto imagem={projeto.imagem} />
       <h2 id={`caso-${projeto.id}`} className="projeto__nome">
         {projeto.cliente}
       </h2>

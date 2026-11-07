@@ -1,5 +1,5 @@
 ---
-last_mapped: 2026-11-07T06:24:26Z
+last_mapped: 2026-11-07T19:14:35Z
 total_files: 70
 total_tokens: 87000
 ---
@@ -83,17 +83,20 @@ Cenas, em ordem: `topo` (Via Láctea; viagem longa de 190 svh), `projetos` (o si
 `E` é um objeto mutável fora do React (lido a cada quadro). `interpolar(s)` escreve as cenas vizinhas `a`, `b`, a mistura `t` (smootherstep) e os canais numéricos; o altímetro segura a última leitura; `rastro = max(B.rastro·sin(π·frac), plasma·0,9)`; `nuvens = B.nuvens·sin(π·frac)`.
 
 ### Rolagem → cena (`components/missao/roteiro.tsx`)
-`.missao` tem `height: calc(var(--total) * 1svh)` e o `.palco` é `sticky` de 100svh com todos os cartões absolutos. A cada tique do `gsap.ticker`: posição local em svh → `s` (inteiro durante a parada, fracionário na viagem) → `interpolar(s)` → para os cartões com `|s - i| < 1`, `--d` (-1..1), `--q` (gravidade: chega com `-1 + (1+d)²`, sai com `d²`) e `--o` (assimétrica: o que sai some cedo, o que chega aparece tarde). Também escreve `--plasma` no `html` (escurece o cabeçalho) e o tremor no `transform` do palco. Expõe `window.__missao` para os scripts de QA.
+`.missao` tem `height: calc(var(--total) * 1svh)` e o `.palco` é `sticky` de 100svh com todos os cartões absolutos. A cada tique do `gsap.ticker`: posição local em svh → `s` (inteiro durante a parada, fracionário na viagem) → `interpolar(s)` → os cartões com `|s - i| < 0,5` recebem `transform` e `opacity` **direto no `.cartao`**. Tipos de entrada: `lateral` (±36vw, ±70vw no celular), `queda` (±72svh, com gravidade) e `parada` (só opacidade, a abertura). Fora disso, `data-fora` esconde pelo CSS (o cartão continua focável). Também escreve o fundo do cabeçalho na reentrada e o tremor no palco. Expõe `window.__missao` para os scripts de QA.
 
-### Entradas dos cartões (CSS)
-Só em `html.js:not(.linear)`. `lateral`: `translateX(d · -36vw)` (−70vw no celular); `queda`: `translateY(q · 72svh)`. Cenas com `painel` e todos os cartões no celular ganham fundo sólido.
+**Nada de variável CSS escrita por quadro:** variável herda, e na primeira versão isso recalculava o estilo da página inteira a cada quadro.
 
 ### Mundo 3D (`lib/missao/mundo.ts`, `shaders.ts`)
-**Duas cenas**, porque as escalas não cabem no mesmo espaço:
-- **Via Láctea** (`galaxia`, com `galaxiaCam` própria): `Points` com tamanho em unidades do mundo (o zoom é de verdade), em três camadas: nuvens de luz, poeira escura e estrelas, em espiral logarítmica com barra central, mais um sprite no miolo e o Sol vermelho no braço. A distância cai em escala logarítmica de 205 a 0,5 enquanto o olhar sai do centro para o Sol. No fim, Sol e núcleo do sistema coincidem no centro da tela.
-- **Sistema solar** (`cena`): núcleo, 5 planetas com shader procedural (`PLANETAS`: Sencis, FIDÈLE com anel, Yasmin, Keep New, o azul), halos, órbitas, cinturão em `InstancedMesh`, estrelas e céu (os dois com `uAlfa`, entram no fim do zoom). A câmera mistura ao vivo as poses das duas cenas vizinhas, sobe em arco na viagem, cede ao cursor com mola, treme na reentrada e usa `setViewOffset` (em retrato o objeto sobe).
+**O que é caro é assado uma vez em textura ao montar** (`assar`, shaders `FRAG_ASSAR_*`): superfície de cada planeta (cor em RGB, luzes de cidade em A), núcleo (dois ruídos que correm a velocidades diferentes), céu, ruído ladrilhável da atmosfera e o disco de nuvens e poeira da galáxia. A cada quadro só há leitura de textura e luz.
 
-A camada `tela` (quad de tela cheia, blending pré-multiplicado) desenha por cima: céu da descida e do crepúsculo, nuvens, relevo, plasma nas bordas (substitui a cor), rastros e o rastro radial da travessia. `quadro` escreve `E.projecoes` para as etiquetas.
+**Duas cenas**, porque as escalas não cabem no mesmo espaço:
+- **Via Láctea** (`galaxia`, com `galaxiaCam` própria): disco assado num plano + estrelas em `Points` com tamanho em unidades do mundo, em espiral logarítmica com barra central, sprite no miolo e o Sol vermelho no braço. A distância cai em escala logarítmica de 205 a 0,5 enquanto o olhar vai do centro ao Sol. No fim, Sol e núcleo do sistema coincidem no centro da tela.
+- **Sistema solar** (`cena`): núcleo, 5 planetas (`PLANETAS`: Sencis, FIDÈLE com anel, Yasmin, Keep New, o azul), halos, órbitas, cinturão em `InstancedMesh`, estrelas e céu (os dois com `uAlfa`, entram no fim do zoom). A câmera mistura ao vivo as poses das duas cenas vizinhas, sobe em arco na viagem, cede ao cursor com mola, treme na reentrada e usa `setViewOffset` (em retrato o objeto sobe).
+
+**Nome em estrelas** (`nomeCena`, `montarNome`): pontos amostrados da geometria de `marca-paths.ts`, em coordenadas de tela medidas do `<h1 data-nome>` (por `palco-3d.tsx`, pela cadeia de `offset`). Juntam-se ao carregar (`uForma`) e fogem no zoom (`uFuga`). Desenhados duas vezes: `uSombra` escurece a galáxia em volta. Quando chegam, `html.nome-pronto` acende o `<svg>` sólido por cima; sem cena, ele aparece sozinho aos 4 s.
+
+A camada `tela` (quad de tela cheia, blending pré-multiplicado) desenha por cima: céu da descida e do crepúsculo, nuvens, relevo, plasma nas bordas (substitui a cor), rastros e o rastro radial do zoom. `quadro` escreve `E.projecoes` para as etiquetas, só na cena que as mostra.
 
 ### Instrumentos (`components/missao/instrumentos.tsx`)
 Altímetro (aparece com `alt`) e etiquetas dos planetas presas por linha SVG à posição projetada. A lista `ROTULOS` segue a ordem de `PLANETAS` em `mundo.ts`. Escrita direta no DOM, sem React.
@@ -108,13 +111,16 @@ O id da cena está num elemento absoluto dentro do palco, então o navegador nã
 Decidido por script no `<head>` antes da pintura: movimento reduzido, altura ≤ 520 px ou sem WebGL (`html.linear`, e `sem-webgl` esconde o canvas). Também entra se o `Mundo` falhar ao criar. As regras de cinema somem; os cartões viram blocos empilhados sobre fundo escuro; a câmera fica parada na Via Láctea. O modo não muda depois de carregar.
 
 ## Desempenho
+Teste de referência: descida inteira em 20 s, 390×664, CPU 4× mais lenta, WebGL por software (compara versões; não é o FPS de um celular). Antes da otimização de novembro: 642 quadros, p95 69 ms, 4,2 s de estilo. Depois: 1.812 quadros, p95 21 ms, 1,3 s de estilo.
+
+- Sem ruído por pixel em tempo real (texturas assadas) e sem variável CSS por quadro (`transform`/`opacity` direto).
 - `three` importado sob demanda depois da primeira pintura.
-- Modo leve (toque ou ≤ 4 núcleos): DPR 1, menos oitavas de fbm, menos pontos na galáxia (22 mil contra 60 mil), menos estrelas e rochas, sem antialias.
-- DPR máximo 1,5; `aliviar()` cai para 1 se os 120 primeiros quadros passarem de 28 ms em média.
-- Cada cena só é desenhada quando aparece: a galáxia some depois do zoom, o sistema não é desenhado de longe nem sob a atmosfera, a camada `tela` só com algum efeito ativo, e nada roda com a aba oculta.
+- Modo leve (toque ou ≤ 4 núcleos): texturas menores, 14 mil estrelas na galáxia (contra 60 mil), menos rochas, sem antialias, DPR até 1,25.
+- **Resolução adaptativa** (`palco-3d.tsx` → `mundo.reduzir`): a cada 45 quadros em movimento, média acima de 25 ms desce um degrau (DPR até 0,75; depois, metade das estrelas). Nunca sobe. Desligada com `navigator.webdriver`, para os testes compararem igual; os scripts de QA forçam essa propriedade, porque o Chrome por CDP não a liga sozinho.
+- Parada, a cena roda a meio quadro; com a aba oculta, não roda. Cada cena só é desenhada quando aparece.
 
 ## Segurança e infraestrutura
-`next.config.ts` exporta função da fase do Next. CSP: `script-src 'self' 'unsafe-inline'` (o script de modo e o recado do console são inline), `font-src 'self'`, `img-src 'self' data: https://yasmin-g-studio.vercel.app`, `frame-src https://keepnew.vercel.app`, `connect-src 'self'`, `object-src`/`frame-ancestors 'none'`. HSTS sem `preload`. Redirects 307 das URLs antigas para âncoras.
+`next.config.ts` exporta função da fase do Next. CSP: `script-src 'self' 'unsafe-inline'` (o script de modo e o recado do console são inline), `font-src 'self'`, `img-src 'self' data:`, `frame-src 'none'`, `connect-src 'self'`, `object-src`/`frame-ancestors 'none'`. HSTS sem `preload`. Redirects 307 das URLs antigas para âncoras.
 
 | Variável | Sem ela |
 |---|---|
@@ -141,7 +147,8 @@ Publicação: push em `main` de `SamuelcCouto/detera-premium` → Vercel (detera
 8. **A ordem de `PLANETAS` (`mundo.ts`), `ROTULOS` (`instrumentos.tsx`) e `foco` das cenas anda junto.** Projeto novo mexe nos três, mais o conteúdo em `missao.tsx`.
 8b. **Cartões no celular** têm altura máxima e rolam por dentro em tela muito curta; o conteúdo longo vai para o dossiê, não para o cartão.
 9. **QA em headless**: WebGL por software (`--use-angle=swiftshader`); a auditoria da skill `mobile` derruba o Chromium em 1920×1080 nesta página — rode com `--sizes` sem o maior. O preview oculto do app não roda `requestAnimationFrame`.
-10. **Imagem externa e iframe exigem CSP** (`img-src`, `frame-src`).
+10. **Imagem externa e iframe exigem CSP** (`img-src`, `frame-src`). Hoje não há nenhum: as imagens dos projetos são locais, e as de Yasmin e Keep New são prints do site no ar (`public/cases`), para atualizar quando o site mudar.
+11. **`next build` com `next start` ligado quebra o servidor de teste** (os arquivos mudam de nome e a página sai sem CSS). Pare, compile, suba de novo.
 
 ## Guia de navegação
 - **Mudar texto** → `src/content/*.ts` (frentes, processo, casos, perguntas) ou `missao.tsx` (frases das cenas e dos dossiês).

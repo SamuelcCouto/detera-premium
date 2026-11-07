@@ -25,8 +25,7 @@ export function Header() {
   return (
     <header className="cabecalho">
       <a href="#topo" className="cabecalho__marca" aria-label={`${site.name}, voltar ao início`}>
-        <Simbolo className="h-7 w-auto text-[var(--color-luz)]" />
-        <span aria-hidden="true">{site.name}</span>
+        <Simbolo className="h-8 w-auto text-[var(--color-luz)]" />
       </a>
 
       <nav aria-label="Principal" className="cabecalho__nav">
@@ -44,8 +43,9 @@ export function Header() {
         href={whatsappUrl("Olá! Vim pelo site da DETERA e quero começar um projeto.")}
         target="_blank"
         rel="noopener noreferrer"
+        aria-label="Começar um projeto"
       >
-        Começar um projeto
+        Começar<span className="cabecalho__cta-resto"> um projeto</span>
       </a>
 
       <button type="button" className="cabecalho__abrir" onClick={abrir} aria-haspopup="dialog">

@@ -1,8 +1,17 @@
 /**
- * Shaders da missão. Ruído de valor com hash, não simplex: a cena tem planetas,
- * núcleo, céu e a camada de atmosfera, todos com fbm, e o de valor custa
- * menos no celular sem diferença visível nessa escala.
+ * Shaders da missão, em dois grupos.
+ *
+ * Os `ASSAR` rodam uma vez só, ao montar a cena, e pintam em textura o que é
+ * caro: o ruído dos planetas, do núcleo, do céu e da camada de atmosfera. Os
+ * outros rodam a cada quadro e só leem essas texturas e fazem a luz.
+ *
+ * Na primeira versão, o fbm era calculado por pixel a cada quadro: um planeta
+ * de perto, ocupando a tela, somava dezenas de amostras de ruído por pixel, e
+ * no celular a cena travava. O que muda no tempo (a rotação, o núcleo que
+ * ferve, as chamas) agora é só a textura correndo.
  */
+
+const PI = "3.14159265";
 
 const RUIDO_3D = /* glsl */ `
 float hash3(vec3 p) {
@@ -24,7 +33,7 @@ float ruido3(vec3 x) {
 float fbm3(vec3 p) {
   float v = 0.0;
   float a = 0.5;
-  for (int i = 0; i < OITAVAS; i++) {
+  for (int i = 0; i < 5; i++) {
     v += a * ruido3(p);
     p *= 2.03;
     a *= 0.5;
@@ -33,42 +42,137 @@ float fbm3(vec3 p) {
 }
 `;
 
-const RUIDO_2D = /* glsl */ `
-float hash21(vec2 p) {
+/** A direção na esfera para cada ponto da textura, na mesma conta do `SphereGeometry`. */
+const DIRECAO = /* glsl */ `
+vec3 direcao(vec2 uv) {
+  float teta = (1.0 - uv.y) * ${PI};
+  float fi = uv.x * 2.0 * ${PI};
+  return vec3(-cos(fi) * sin(teta), cos(teta), sin(fi) * sin(teta));
+}
+`;
+
+export const VERT_ASSAR = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}
+`;
+
+/** A superfície de um planeta: cor em RGB e luzes de cidade em A. */
+export const FRAG_ASSAR_PLANETA = /* glsl */ `
+uniform vec3 uCorA;
+uniform vec3 uCorB;
+uniform vec3 uCorC;
+uniform float uTipo;
+uniform float uSemente;
+varying vec2 vUv;
+${RUIDO_3D}
+${DIRECAO}
+void main() {
+  vec3 d = direcao(vUv);
+  vec3 o = d + uSemente;
+  vec3 cor;
+  float cidade = 0.0;
+
+  if (uTipo < 0.5) {
+    // Terreno em manchas.
+    float n = fbm3(o * 3.0);
+    float t = fbm3(o * 5.0 + n * 2.0);
+    cor = mix(uCorA, uCorB, smoothstep(0.32, 0.68, t));
+    cor = mix(cor, uCorC, smoothstep(0.66, 0.84, n) * 0.8);
+  } else if (uTipo < 1.5) {
+    // Gigante de gás: faixas tortas pelo ruído.
+    float y = d.y * 9.0 + fbm3(o * vec3(2.0, 7.0, 2.0)) * 2.6;
+    float faixa = sin(y) * 0.5 + 0.5;
+    cor = mix(uCorA, uCorB, faixa);
+    cor = mix(cor, uCorC, smoothstep(0.55, 1.0, sin(y * 2.3 + 1.0) * 0.5 + 0.5) * 0.55);
+  } else if (uTipo < 2.5) {
+    // Superfície escura, com luzes de cidade no lado da noite.
+    float g = fbm3(o * 4.5);
+    cor = mix(uCorA, uCorB, smoothstep(0.3, 0.74, g));
+    cidade = step(0.9, hash3(floor(d * 70.0))) * smoothstep(0.42, 0.66, fbm3(o * 3.0));
+  } else {
+    // Oceano, continentes e nuvens.
+    float c = fbm3(o * 2.4);
+    cor = c > 0.56 ? mix(uCorC * 0.8, uCorC, (c - 0.56) * 3.0) : mix(uCorA, uCorB, c * 1.6);
+    float nv = fbm3(o * 4.0);
+    cor = mix(cor, vec3(0.88, 0.92, 1.0), smoothstep(0.56, 0.8, nv) * 0.7);
+  }
+  gl_FragColor = vec4(cor, cidade);
+}
+`;
+
+/** O núcleo: dois ruídos em R e G, que correm em velocidades diferentes para ferver. */
+export const FRAG_ASSAR_NUCLEO = /* glsl */ `
+varying vec2 vUv;
+${RUIDO_3D}
+${DIRECAO}
+void main() {
+  vec3 d = direcao(vUv);
+  gl_FragColor = vec4(fbm3(d * 3.2), fbm3(d * 9.0), 0.0, 1.0);
+}
+`;
+
+/** O céu de fundo: nebulosas frias e uma mancha de poeira cor de ferrugem, bem baixas. */
+export const FRAG_ASSAR_CEU = /* glsl */ `
+varying vec2 vUv;
+${RUIDO_3D}
+${DIRECAO}
+void main() {
+  vec3 d = direcao(vUv);
+  float n = fbm3(d * 2.2);
+  float m = fbm3(d * 5.0 + n * 1.5);
+  vec3 base = vec3(0.012, 0.022, 0.05);
+  vec3 neb = mix(vec3(0.02, 0.07, 0.11), vec3(0.06, 0.1, 0.2), m);
+  vec3 cor = mix(base, neb, smoothstep(0.45, 0.8, n) * 0.55);
+  float poeira = smoothstep(0.6, 0.85, fbm3(d * 3.1 + 4.0)) * smoothstep(-0.2, 0.4, d.y);
+  cor += vec3(0.16, 0.05, 0.03) * poeira * 0.35;
+  gl_FragColor = vec4(cor, 1.0);
+}
+`;
+
+/**
+ * Ruído que emenda nas bordas (cada oitava repete no mesmo período), para a
+ * camada de atmosfera poder ler com `RepeatWrapping` sem aparecer costura.
+ */
+export const FRAG_ASSAR_RUIDO = /* glsl */ `
+varying vec2 vUv;
+float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
   return fract(p.x * p.y);
 }
-float ruido2(vec2 p) {
+float ruido(vec2 p, float per) {
   vec2 i = floor(p);
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash21(i), hash21(i + vec2(1, 0)), f.x),
-             mix(hash21(i + vec2(0, 1)), hash21(i + vec2(1, 1)), f.x), f.y);
+  vec2 a = mod(i, per);
+  vec2 b = mod(i + 1.0, per);
+  return mix(mix(hash(a), hash(vec2(b.x, a.y)), f.x),
+             mix(hash(vec2(a.x, b.y)), hash(b), f.x), f.y);
 }
-float fbm2(vec2 p) {
+void main() {
   float v = 0.0;
   float a = 0.5;
-  for (int i = 0; i < OITAVAS; i++) {
-    v += a * ruido2(p);
-    p = p * 2.02 + vec2(1.7, 9.2);
+  float per = 8.0;
+  for (int i = 0; i < 5; i++) {
+    v += a * ruido(vUv * per, per);
+    per *= 2.0;
     a *= 0.5;
   }
-  return v;
+  gl_FragColor = vec4(vec3(v), 1.0);
 }
 `;
-
-export const comOitavas = (fonte: string, oitavas: number) =>
-  `#define OITAVAS ${oitavas}\n${fonte}`;
 
 /* ------------------------------------------------------------------ */
 
 export const VERT_ESFERA = /* glsl */ `
 varying vec3 vN;
 varying vec3 vP;
-varying vec3 vO;
+varying vec2 vUv;
 void main() {
-  vO = normalize(position);
+  vUv = uv;
   vec4 mundo = modelMatrix * vec4(position, 1.0);
   vP = mundo.xyz;
   vN = normalize(mat3(modelMatrix) * normal);
@@ -78,62 +182,23 @@ void main() {
 
 /** Planeta: o núcleo (a estrela) está na origem, então a luz vem de `-vP`. */
 export const FRAG_PLANETA = /* glsl */ `
-uniform vec3 uCorA;
-uniform vec3 uCorB;
+uniform sampler2D uMapa;
 uniform vec3 uCorC;
 uniform vec3 uAtm;
-uniform float uTipo;
-uniform float uTempo;
-uniform float uSemente;
 varying vec3 vN;
 varying vec3 vP;
-varying vec3 vO;
-${RUIDO_3D}
+varying vec2 vUv;
 void main() {
   vec3 N = normalize(vN);
   vec3 L = normalize(-vP);
   vec3 V = normalize(cameraPosition - vP);
-  vec3 o = vO + uSemente;
-  vec3 cor;
-
-  if (uTipo < 0.5) {
-    // Dunas cor de ferrugem.
-    float n = fbm3(o * 3.0);
-    float d = fbm3(o * 5.0 + n * 2.0);
-    cor = mix(uCorA, uCorB, smoothstep(0.32, 0.68, d));
-    cor = mix(cor, uCorC, smoothstep(0.66, 0.84, n) * 0.8);
-  } else if (uTipo < 1.5) {
-    // Gigante de gás: faixas tortas pelo ruído.
-    float y = vO.y * 9.0 + fbm3(o * vec3(2.0, 7.0, 2.0) + vec3(uTempo * 0.012, 0.0, 0.0)) * 2.6;
-    float faixa = sin(y) * 0.5 + 0.5;
-    cor = mix(uCorA, uCorB, faixa);
-    cor = mix(cor, uCorC, smoothstep(0.55, 1.0, sin(y * 2.3 + 1.0) * 0.5 + 0.5) * 0.55);
-  } else if (uTipo < 2.5) {
-    // Gelo, com luzes de cidade no lado escuro.
-    float g = fbm3(o * 4.5);
-    cor = mix(uCorA, uCorB, smoothstep(0.3, 0.74, g));
-  } else {
-    // Oceano, continentes e nuvens.
-    float c = fbm3(o * 2.4);
-    cor = c > 0.56 ? mix(uCorC * 0.8, uCorC, (c - 0.56) * 3.0) : mix(uCorA, uCorB, c * 1.6);
-    float nv = fbm3(o * 4.0 + vec3(uTempo * 0.015, 0.0, 0.0));
-    cor = mix(cor, vec3(0.88, 0.92, 1.0), smoothstep(0.56, 0.8, nv) * 0.7);
-  }
-
+  vec4 m = texture2D(uMapa, vUv);
   float luz = dot(N, L);
-  float dif = max(luz, 0.0);
   float dia = smoothstep(-0.08, 0.32, luz);
-  vec3 cena = cor * (0.1 + 1.1 * dif);
-
-  if (uTipo > 1.5 && uTipo < 2.5) {
-    vec3 q = vO * 70.0;
-    float h = hash3(floor(q));
-    float cidade = step(0.9, h) * smoothstep(0.42, 0.66, fbm3(o * 3.0));
-    cena += uCorC * cidade * (1.0 - dia) * 1.4;
-  }
-
-  float fr = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-  cena += uAtm * fr * (0.08 + 1.1 * dia);
+  vec3 cena = m.rgb * (0.1 + 1.1 * max(luz, 0.0));
+  cena += uCorC * m.a * (1.0 - dia) * 1.4;
+  float fr = 1.0 - max(dot(N, V), 0.0);
+  cena += uAtm * fr * fr * fr * (0.08 + 1.1 * dia);
   gl_FragColor = vec4(cena, 1.0);
 }
 `;
@@ -162,51 +227,43 @@ void main() {
 }
 `;
 
-/** O núcleo: superfície que ferve devagar, borda mais quente. */
+/** O núcleo: as duas camadas de ruído correm a velocidades diferentes, e isso ferve. */
 export const FRAG_NUCLEO = /* glsl */ `
+uniform sampler2D uMapa;
 uniform float uTempo;
 varying vec3 vN;
 varying vec3 vP;
-varying vec3 vO;
-${RUIDO_3D}
+varying vec2 vUv;
 void main() {
   vec3 N = normalize(vN);
   vec3 V = normalize(cameraPosition - vP);
-  float n = fbm3(vO * 3.2 + vec3(0.0, uTempo * 0.05, 0.0));
-  float n2 = fbm3(vO * 9.0 - vec3(uTempo * 0.11, 0.0, uTempo * 0.07));
+  float n = texture2D(uMapa, vUv + vec2(uTempo * 0.006, 0.0)).r;
+  float n2 = texture2D(uMapa, vUv - vec2(uTempo * 0.013, 0.0)).g;
   vec3 cor = mix(vec3(0.42, 0.03, 0.05), vec3(1.0, 0.23, 0.23), smoothstep(0.25, 0.75, n));
   cor = mix(cor, vec3(1.0, 0.7, 0.42), smoothstep(0.58, 0.82, n2) * 0.85);
   float centro = max(dot(N, V), 0.0);
   cor *= 0.55 + 0.6 * pow(centro, 0.6);
-  cor += vec3(1.0, 0.38, 0.28) * pow(1.0 - centro, 2.2) * 0.9;
+  float borda = 1.0 - centro;
+  cor += vec3(1.0, 0.38, 0.28) * borda * borda * 0.9;
   gl_FragColor = vec4(cor, 1.0);
 }
 `;
 
-/** O céu de fundo: nebulosas frias e uma mancha de poeira cor de ferrugem, bem baixas. */
 export const VERT_CEU = /* glsl */ `
-varying vec3 vD;
+varying vec2 vUv;
 void main() {
-  vD = normalize(position);
+  vUv = uv;
   vec4 p = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
   gl_Position = p.xyww;
 }
 `;
 
 export const FRAG_CEU = /* glsl */ `
+uniform sampler2D uMapa;
 uniform float uAlfa;
-varying vec3 vD;
-${RUIDO_3D}
+varying vec2 vUv;
 void main() {
-  float n = fbm3(vD * 2.2);
-  float m = fbm3(vD * 5.0 + n * 1.5);
-  vec3 base = vec3(0.012, 0.022, 0.05);
-  vec3 neb = mix(vec3(0.02, 0.07, 0.11), vec3(0.06, 0.1, 0.2), m);
-  float mascara = smoothstep(0.45, 0.8, n) * 0.55;
-  vec3 cor = mix(base, neb, mascara);
-  float poeira = smoothstep(0.6, 0.85, fbm3(vD * 3.1 + 4.0)) * smoothstep(-0.2, 0.4, vD.y);
-  cor += vec3(0.16, 0.05, 0.03) * poeira * 0.35;
-  gl_FragColor = vec4(cor, uAlfa);
+  gl_FragColor = vec4(texture2D(uMapa, vUv).rgb, uAlfa);
 }
 `;
 
@@ -235,8 +292,7 @@ export const FRAG_ESTRELAS = /* glsl */ `
 varying vec3 vCor;
 varying float vBrilho;
 void main() {
-  vec2 c = gl_PointCoord - 0.5;
-  float d = length(c);
+  float d = length(gl_PointCoord - 0.5);
   float a = smoothstep(0.5, 0.0, d);
   gl_FragColor = vec4(vCor * vBrilho * a, a);
 }
@@ -273,9 +329,78 @@ varying vec3 vCor;
 varying float vA;
 void main() {
   float d = length(gl_PointCoord - 0.5) * 2.0;
-  float a = (1.0 - smoothstep(0.0, 1.0, d));
+  float a = 1.0 - smoothstep(0.0, 1.0, d);
   a *= a * vA;
   gl_FragColor = vec4(vCor, a);
+}
+`;
+
+/** O disco de luz e poeira da galáxia, assado numa textura e desenhado como um plano. */
+export const VERT_DISCO = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+export const FRAG_DISCO = /* glsl */ `
+uniform sampler2D uMapa;
+uniform float uAlfa;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = vec4(texture2D(uMapa, vUv).rgb * uAlfa, 1.0);
+}
+`;
+
+/**
+ * O nome DETERA escrito em estrelas. Cada estrela vem de um ponto da galáxia
+ * (`aOrigem`) e cai no seu lugar na letra (`position`), com atraso próprio. As
+ * coordenadas são da tela: `uCentro` e `uLargura` vêm do `<h1>` medido no DOM,
+ * para o nome ficar exatamente onde o layout reservou. No zoom, `uFuga` empurra
+ * tudo para fora, como quem passa por dentro delas.
+ *
+ * A mesma geometria é desenhada duas vezes: com `uSombra`, em pontos largos e
+ * pretos, ela escurece a galáxia em volta das letras. Sem isso, estrela sobre
+ * estrela, o nome se perdia no braço que passa atrás.
+ */
+export const VERT_NOME = /* glsl */ `
+attribute vec2 aOrigem;
+attribute float aFase;
+attribute float aTam;
+attribute vec3 aCor;
+uniform float uForma;
+uniform float uFuga;
+uniform float uLargura;
+uniform float uAspecto;
+uniform vec2 uCentro;
+uniform float uPx;
+uniform float uTempo;
+uniform float uSombra;
+varying vec3 vCor;
+varying float vA;
+void main() {
+  float k = clamp(uForma * 1.45 - aFase * 0.45, 0.0, 1.0);
+  k = k * k * (3.0 - 2.0 * k);
+  vec2 p = mix(aOrigem, position.xy, k) * (1.0 + uFuga * (1.0 + aFase * 3.0));
+  gl_Position = vec4(
+    p.x * uLargura + uCentro.x,
+    p.y * uLargura * uAspecto + uCentro.y,
+    0.0, 1.0);
+  float pisca = 0.86 + 0.14 * sin(uTempo * (0.5 + aFase * 2.0) + aFase * 50.0);
+  vCor = aCor * pisca * (1.0 - uSombra);
+  vA = mix(0.2, 1.0, k) * (1.0 - uFuga) * smoothstep(0.0, 0.06, uForma);
+  gl_PointSize = aTam * uPx * (1.0 + uSombra * 3.4);
+  if (uSombra > 0.5) vA *= 0.09 * k;
+}
+`;
+
+export const FRAG_NOME = /* glsl */ `
+varying vec3 vCor;
+varying float vA;
+void main() {
+  float d = length(gl_PointCoord - 0.5) * 2.0;
+  gl_FragColor = vec4(vCor, (1.0 - smoothstep(0.45, 1.0, d)) * vA);
 }
 `;
 
@@ -292,11 +417,12 @@ void main() {
 /**
  * A camada de atmosfera, desenhada por cima da cena 3D numa passada só:
  * céu da descida e do crepúsculo, nuvens, relevo em três planos, plasma nas
- * bordas, rastros verticais e o rastro radial da chegada. A cor sai
+ * bordas, rastros verticais e o rastro radial do zoom. A cor sai
  * pré-multiplicada: o céu cobre a cena na proporção de `uAtmos`, e o que é
- * luz (plasma, rastros) só soma.
+ * luz (rastros) só soma. O ruído vem de `uRuido`, assado uma vez.
  */
 export const FRAG_TELA = /* glsl */ `
+uniform sampler2D uRuido;
 uniform vec2 uRes;
 uniform float uTempo;
 uniform float uAtmos;
@@ -308,8 +434,15 @@ uniform float uRastro;
 uniform float uRadial;
 uniform vec2 uTremor;
 varying vec2 vUv;
-${RUIDO_2D}
 
+float hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+float fbm2(vec2 p) {
+  return texture2D(uRuido, p * 0.125).r;
+}
 float crista(float x, float base, float amp, float semente) {
   return base + (fbm2(vec2(x, semente)) - 0.5) * 2.0 * amp;
 }
@@ -365,9 +498,11 @@ void main() {
 
   if (uPlasma > 0.001) {
     // O plasma substitui a cor nas bordas em vez de somar: somado sobre o
-    // azul ele estourava para um rosa-creme lavado.
+    // azul ele estourava para um rosa-creme lavado. O ângulo é escalado para
+    // dar uma volta exata no período do ruído, senão aparece uma costura à
+    // esquerda, onde o atan salta.
     float borda = max(abs(p.x) / (asp * 0.5), abs(p.y) / 0.5);
-    float chama = fbm2(vec2(atan(p.y, p.x) * 3.0, length(p) * 4.0 - uTempo * 3.2));
+    float chama = fbm2(vec2(atan(p.y, p.x) / ${PI} * 4.0, length(p) * 4.0 - uTempo * 3.2));
     float e = smoothstep(0.6, 1.1, borda + chama * 0.32);
     vec3 pc = mix(vec3(0.82, 0.1, 0.08), vec3(1.0, 0.42, 0.13), chama);
     pc = mix(pc, vec3(1.0, 0.74, 0.42), smoothstep(1.02, 1.25, borda + chama * 0.3));
@@ -395,7 +530,7 @@ void main() {
   if (uRadial > 0.001) {
     float ang = atan(p.y, p.x);
     float raios = 180.0;
-    float a = (ang + 3.14159) / 6.28318 * raios;
+    float a = (ang + ${PI}) / (2.0 * ${PI}) * raios;
     float h = hash21(vec2(floor(a), 1.3));
     float rr = length(p);
     float f = fract(rr * 1.1 - uTempo * (0.9 + h * 1.6) + h);

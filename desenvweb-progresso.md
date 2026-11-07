@@ -22,6 +22,8 @@ Mantido pela skill desenvwebpremium. Atualize ao fim de cada etapa. Este arquivo
 - 2026-11-01: v2 recusada ("cara de site feito por IA"). Pedido: experiência totalmente diferente, imersão no cosmos, gravidade, entrada em atmosfera, sistemas solares, transições horizontais e verticais, cinematográfica. Liberdade total de ferramenta. Publicar direto sobrescrevendo (versão de teste).
 - 2026-11-07: "ficou bom", mas enxugar texto e animações porque dificilmente alguém vê o site até o fim; "o que já construímos" com cada projeto um planeta; começar na Via Láctea, com a primeira transição indo direto ao sistema solar e aos projetos.
 
+- 2026-11-07: abertura ainda com "cara de IA" e Yasmin/Keep New sem imagem. Celular "extremamente travado", decisão delegada: um modelo só, otimizado, com resolução adaptativa.
+
 ## Pendências
 - Teste em celular de verdade (em pé e deitado) e num notebook comum: o headless usa WebGL por software e não mede FPS real.
 - O manual de identidade em docs/identidade é da v2 (não reflete a paleta cósmica nem a Spectral).

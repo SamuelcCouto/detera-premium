@@ -1,21 +1,30 @@
 import * as THREE from "three";
 
+import { NOME_DETERA } from "@/components/brand/marca-paths";
 import { CENAS, type Cena, type Foco } from "@/lib/missao/cenas";
 import { E } from "@/lib/missao/estado";
 import {
-  comOitavas,
+  FRAG_ASSAR_CEU,
+  FRAG_ASSAR_NUCLEO,
+  FRAG_ASSAR_PLANETA,
+  FRAG_ASSAR_RUIDO,
   FRAG_CEU,
+  FRAG_DISCO,
   FRAG_ESTRELAS,
   FRAG_GALAXIA,
   FRAG_HALO,
+  FRAG_NOME,
   FRAG_NUCLEO,
   FRAG_PLANETA,
   FRAG_TELA,
+  VERT_ASSAR,
   VERT_CEU,
+  VERT_DISCO,
   VERT_ESFERA,
   VERT_ESTRELAS,
   VERT_GALAXIA,
   VERT_HALO,
+  VERT_NOME,
   VERT_TELA,
 } from "@/lib/missao/shaders";
 import { criarGerador } from "@/lib/utils/aleatorio";
@@ -31,6 +40,11 @@ import { criarGerador } from "@/lib/utils/aleatorio";
  * a partir das duas cenas vizinhas do roteiro (`E.a`, `E.b`, `E.t`): cada uma
  * diz para onde olhar e de onde, e a mistura entre as duas é a viagem. Como os
  * planetas se movem, a pose de cada cena é recalculada ao vivo.
+ *
+ * O que é caro é pintado uma vez em textura ao montar (`assar`): as superfícies,
+ * o céu, o ruído da atmosfera e o disco da galáxia. A cada quadro só há leitura
+ * de textura e luz. Vale para qualquer aparelho; o modo `leve` só usa texturas
+ * menores e menos pontos.
  */
 
 type Planeta = {
@@ -41,7 +55,6 @@ type Planeta = {
   inclinacao: number;
   fase: number;
   omega: number;
-  material: THREE.ShaderMaterial;
 };
 
 /** Um planeta por projeto, na cor do mundo de cada um; o último, azul, é o próximo. */
@@ -76,26 +89,32 @@ export class Mundo {
   private telaMat: THREE.ShaderMaterial;
   private nucleoMat: THREE.ShaderMaterial;
   private estrelasMat: THREE.ShaderMaterial;
+  private nomeCena = new THREE.Scene();
+  private nomeMat: THREE.ShaderMaterial;
+  private nomeInicio = -1;
   private planetas: Planeta[] = [];
   private cinturao: THREE.InstancedMesh;
   private ceuMat: THREE.ShaderMaterial;
   private galaxia = new THREE.Scene();
   private galaxiaCam = new THREE.PerspectiveCamera(42, 1, 0.02, 1200);
   private galaxiaGiro = new THREE.Group();
-  private galaxiaMats: THREE.ShaderMaterial[] = [];
+  private galaxiaMat: THREE.ShaderMaterial | null = null;
+  private galaxiaEstrelas: THREE.BufferGeometry | null = null;
+  private discoMat: THREE.ShaderMaterial | null = null;
+  private assados: THREE.WebGLRenderTarget[] = [];
   private miolo: THREE.Sprite;
   private solDaGalaxia: THREE.Sprite;
   private largura = 1;
   private altura = 1;
   private dpr = 1;
-  private dprMax = 1.5;
+  private dprMax: number;
   private v = new THREE.Vector3();
 
   readonly leve: boolean;
 
   constructor(canvas: HTMLCanvasElement, leve: boolean) {
     this.leve = leve;
-    const oitavas = leve ? 3 : 5;
+    this.dprMax = leve ? 1.25 : 1.5;
     const aleatorio = criarGerador(20261101);
 
     this.renderer = new THREE.WebGLRenderer({
@@ -107,11 +126,18 @@ export class Mundo {
     this.renderer.autoClear = false;
     this.renderer.setClearColor(0x050913, 1);
 
+    // Tamanho das superfícies assadas.
+    const mapaL = leve ? 1024 : 2048;
+    const mapaA = mapaL / 2;
+
     // Céu de fundo.
     this.ceuMat = new THREE.ShaderMaterial({
       vertexShader: VERT_CEU,
-      fragmentShader: comOitavas(FRAG_CEU, leve ? 3 : 4),
-      uniforms: { uAlfa: { value: 1 } },
+      fragmentShader: FRAG_CEU,
+      uniforms: {
+        uMapa: { value: this.assar(FRAG_ASSAR_CEU, {}, leve ? 1024 : 2048, leve ? 512 : 1024) },
+        uAlfa: { value: 1 },
+      },
       side: THREE.BackSide,
       transparent: true,
       depthWrite: false,
@@ -161,8 +187,11 @@ export class Mundo {
     // O núcleo e o brilho dele.
     this.nucleoMat = new THREE.ShaderMaterial({
       vertexShader: VERT_ESFERA,
-      fragmentShader: comOitavas(FRAG_NUCLEO, oitavas),
-      uniforms: { uTempo: { value: 0 } },
+      fragmentShader: FRAG_NUCLEO,
+      uniforms: {
+        uMapa: { value: this.assar(FRAG_ASSAR_NUCLEO, {}, mapaL, mapaA) },
+        uTempo: { value: 0 },
+      },
     });
     this.cena.add(new THREE.Mesh(new THREE.SphereGeometry(5, 64, 32), this.nucleoMat));
     const brilho = this.texturaBrilho();
@@ -189,19 +218,28 @@ export class Mundo {
     this.cena.add(new THREE.AmbientLight(0x1b2440, 0.6));
 
     // Planetas, órbitas e halos.
-    for (const def of PLANETAS) {
+    PLANETAS.forEach((def, indice) => {
       const grupo = new THREE.Group();
-      const material = new THREE.ShaderMaterial({
-        vertexShader: VERT_ESFERA,
-        fragmentShader: comOitavas(FRAG_PLANETA, oitavas),
-        uniforms: {
+      const mapa = this.assar(
+        FRAG_ASSAR_PLANETA,
+        {
           uCorA: { value: cor(def.a) },
           uCorB: { value: cor(def.b) },
           uCorC: { value: cor(def.c) },
-          uAtm: { value: cor(def.atm) },
           uTipo: { value: def.tipo },
-          uTempo: { value: 0 },
-          uSemente: { value: def.tipo * 3.7 },
+          uSemente: { value: indice * 3.7 },
+        },
+        mapaL,
+        mapaA,
+        true,
+      );
+      const material = new THREE.ShaderMaterial({
+        vertexShader: VERT_ESFERA,
+        fragmentShader: FRAG_PLANETA,
+        uniforms: {
+          uMapa: { value: mapa },
+          uCorC: { value: cor(def.c) },
+          uAtm: { value: cor(def.atm) },
         },
       });
       const corpo = new THREE.Mesh(new THREE.SphereGeometry(def.raio, 64, 32), material);
@@ -235,15 +273,14 @@ export class Mundo {
         fase: def.fase,
         // Terceira lei de Kepler, bem devagar: a câmera precisa conseguir acompanhar.
         omega: 0.022 * Math.pow(16 / def.orbita, 1.5),
-        material,
       });
-    }
+    });
 
     // Cinturão de asteroides.
     const pedras = leve ? 260 : 700;
     this.cinturao = new THREE.InstancedMesh(
       new THREE.IcosahedronGeometry(1, 0),
-      new THREE.MeshStandardMaterial({ color: 0x8a7f78, roughness: 1, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0x8a7f78, flatShading: true }),
       pedras,
     );
     const m = new THREE.Matrix4();
@@ -296,11 +333,15 @@ export class Mundo {
     this.galaxiaGiro.add(this.solDaGalaxia);
     this.galaxia.add(this.galaxiaGiro);
 
+    // O nome em estrelas.
+    this.nomeMat = this.montarNome(aleatorio, leve);
+
     // A camada de atmosfera.
     this.telaMat = new THREE.ShaderMaterial({
       vertexShader: VERT_TELA,
-      fragmentShader: comOitavas(FRAG_TELA, oitavas),
+      fragmentShader: FRAG_TELA,
       uniforms: {
+        uRuido: { value: this.assar(FRAG_ASSAR_RUIDO, {}, 512, 512, false, true) },
         uRes: { value: new THREE.Vector2(1, 1) },
         uTempo: { value: 0 },
         uAtmos: { value: 0 },
@@ -324,7 +365,154 @@ export class Mundo {
     this.tela.add(quad);
   }
 
-  /** Brilho radial pintado num canvas: um só, usado pelo núcleo e pela cápsula. */
+  /**
+   * Pinta um shader numa textura, uma vez. `mipmaps` serve às superfícies dos
+   * planetas, que de longe viram poucos pixels e cintilariam sem eles;
+   * `ladrilho` repete nos dois eixos (nas esferas, só em volta do equador).
+   */
+  private assar(
+    fragmentShader: string,
+    uniforms: Record<string, THREE.IUniform>,
+    largura: number,
+    altura: number,
+    mipmaps = false,
+    ladrilho = false,
+  ) {
+    const alvo = new THREE.WebGLRenderTarget(largura, altura, {
+      depthBuffer: false,
+      generateMipmaps: mipmaps,
+      minFilter: mipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      wrapS: THREE.RepeatWrapping,
+      wrapT: ladrilho ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping,
+    });
+    const material = new THREE.ShaderMaterial({
+      vertexShader: VERT_ASSAR,
+      fragmentShader,
+      uniforms,
+      blending: THREE.NoBlending,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const geometria = new THREE.PlaneGeometry(2, 2);
+    const quad = new THREE.Mesh(geometria, material);
+    quad.frustumCulled = false;
+    const cena = new THREE.Scene();
+    cena.add(quad);
+    this.renderer.setRenderTarget(alvo);
+    this.renderer.render(cena, this.telaCam);
+    this.renderer.setRenderTarget(null);
+    geometria.dispose();
+    material.dispose();
+    this.assados.push(alvo);
+    return alvo.texture;
+  }
+
+  /**
+   * As estrelas que formam o nome. As posições saem da própria geometria da
+   * marca, desenhada num canvas fora da tela e amostrada: parte no miolo das
+   * letras e parte na borda, que é o que deixa os chanfros reconhecíveis.
+   *
+   * São poeira, não o nome em si: letra feita só de pontos parecia granito e
+   * perdia o desenho da marca. Quando elas chegam, o `<svg>` do `<h1>` acende
+   * por cima, sólido e exato (`nome-pronto`).
+   */
+  private montarNome(aleatorio: () => number, leve: boolean) {
+    const W = 716;
+    const H = 128;
+    const e = 2;
+    const c = document.createElement("canvas");
+    c.width = W * e;
+    c.height = H * e;
+    const ctx = c.getContext("2d", { willReadFrequently: true })!;
+    ctx.scale(e, e);
+    for (const letra of NOME_DETERA) ctx.fill(new Path2D(letra.d), "evenodd");
+    const { data } = ctx.getImageData(0, 0, c.width, c.height);
+    const cheio = (x: number, y: number) =>
+      x >= 0 && y >= 0 && x < c.width && y < c.height && data[(y * c.width + x) * 4 + 3] > 128;
+    const miolo: [number, number][] = [];
+    const borda: [number, number][] = [];
+    for (let y = 0; y < c.height; y++) {
+      for (let x = 0; x < c.width; x++) {
+        if (!cheio(x, y)) continue;
+        const naBorda = !cheio(x - 2, y) || !cheio(x + 2, y) || !cheio(x, y - 2) || !cheio(x, y + 2);
+        (naBorda ? borda : miolo).push([x, y]);
+      }
+    }
+
+    const total = leve ? 3500 : 8000;
+    const pos = new Float32Array(total * 3);
+    const origem = new Float32Array(total * 2);
+    const fase = new Float32Array(total);
+    const tam = new Float32Array(total);
+    const cores = new Float32Array(total * 3);
+    const tons = [cor("#f4f6fb"), cor("#cfdcf8"), cor("#ffe2c4"), cor("#ff6a55")];
+    for (let i = 0; i < total; i++) {
+      const lista = aleatorio() < 0.45 ? borda : miolo;
+      const [x, y] = lista[Math.floor(aleatorio() * lista.length)];
+      pos.set([x / c.width - 0.5, (0.5 - y / c.height) * (H / W), 0], i * 3);
+      const ang = aleatorio() * Math.PI * 2;
+      const r = 0.15 + aleatorio() * 0.95;
+      origem.set([Math.cos(ang) * r, Math.sin(ang) * r * 0.45], i * 2);
+      fase[i] = aleatorio();
+      tam[i] = 0.7 + aleatorio() * 0.7;
+      const sorte = aleatorio();
+      const tom = tons[sorte < 0.72 ? 0 : sorte < 0.9 ? 1 : sorte < 0.97 ? 2 : 3];
+      cores.set([tom.r, tom.g, tom.b], i * 3);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("aOrigem", new THREE.BufferAttribute(origem, 2));
+    geo.setAttribute("aFase", new THREE.BufferAttribute(fase, 1));
+    geo.setAttribute("aTam", new THREE.BufferAttribute(tam, 1));
+    geo.setAttribute("aCor", new THREE.BufferAttribute(cores, 3));
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: VERT_NOME,
+      fragmentShader: FRAG_NOME,
+      uniforms: {
+        uForma: { value: 0 },
+        uFuga: { value: 0 },
+        uLargura: { value: 1 },
+        uAspecto: { value: 1 },
+        uCentro: { value: new THREE.Vector2() },
+        uPx: { value: 2 },
+        uTempo: { value: 0 },
+        uSombra: { value: 0 },
+      },
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    // A sombra compartilha os valores do nome; só muda o `uSombra` e a mistura.
+    const sombraMat = mat.clone();
+    sombraMat.uniforms = { ...mat.uniforms, uSombra: { value: 1 } };
+    sombraMat.blending = THREE.NormalBlending;
+    for (const material of [sombraMat, mat]) {
+      const pontos = new THREE.Points(geo, material);
+      pontos.frustumCulled = false;
+      this.nomeCena.add(pontos);
+    }
+    return mat;
+  }
+
+  /** Onde o layout reservou o nome, em pixels da tela. */
+  posicionarNome(x: number, y: number, largura: number) {
+    const u = this.nomeMat.uniforms;
+    const W = this.largura;
+    const H = this.altura;
+    u.uLargura.value = (2 * largura) / W;
+    u.uAspecto.value = W / H;
+    u.uCentro.value.set((x / W) * 2 - 1, 1 - (y / H) * 2);
+    u.uPx.value = Math.max(1.3, (largura / 716) * 1.5) * this.dpr;
+  }
+
+  /** O nome já se formou. Depois disso, parado, a cena pode rodar a meio quadro. */
+  get nomePronto() {
+    return this.nomeMat.uniforms.uForma.value >= 1;
+  }
+
+  /** Brilho radial pintado num canvas: um só, usado pelo núcleo e pelo Sol da galáxia. */
   private texturaBrilho() {
     const c = document.createElement("canvas");
     c.width = c.height = 128;
@@ -432,7 +620,7 @@ export class Mundo {
 
     // Estrelas: braços, disco e o miolo em barra.
     const estrelas = nova();
-    const total = leve ? 22000 : 60000;
+    const total = leve ? 14000 : 60000;
     for (let i = 0; i < total; i++) {
       const sorte = aleatorio();
       if (sorte < 0.5) {
@@ -455,7 +643,7 @@ export class Mundo {
 
     // Nuvens de luz, largas e fracas.
     const nuvens = nova();
-    const quantas = leve ? 700 : 2200;
+    const quantas = 2200;
     for (let i = 0; i < quantas; i++) {
       const p = noBraco(20);
       k.copy(quente).lerp(fria, Math.min(1, p.r / (R * 0.7)));
@@ -464,7 +652,7 @@ export class Mundo {
     }
 
     // O brilho difuso do disco, que une os braços: sem ele, é um cata-vento.
-    const disco = leve ? 200 : 500;
+    const disco = 500;
     for (let i = 0; i < disco; i++) {
       const r = R * Math.pow(aleatorio(), 0.7);
       const ang = aleatorio() * Math.PI * 2;
@@ -475,10 +663,10 @@ export class Mundo {
     // Poeira escura, na beira de dentro dos braços.
     const poeira = nova();
     const escura = cor("#05070f");
-    const grao = leve ? 500 : 1500;
+    const grao = 1500;
     for (let i = 0; i < grao; i++) {
       const p = noBraco(7, -0.22);
-      por(poeira, p.x, gauss() * 0.8, p.z, 3 + aleatorio() * 6, 0.3, escura);
+      por(poeira, p.x, gauss() * 0.8, p.z, 5 + aleatorio() * 9, 0.13, escura);
     }
 
     const pontos = (c: Camada, aditivo: boolean) => {
@@ -496,22 +684,71 @@ export class Mundo {
         depthWrite: false,
         blending: aditivo ? THREE.AdditiveBlending : THREE.NormalBlending,
       });
-      this.galaxiaMats.push(mat);
       const p = new THREE.Points(geo, mat);
       p.frustumCulled = false;
-      this.galaxiaGiro.add(p);
+      return p;
     };
-    pontos(nuvens, true);
-    pontos(poeira, false);
-    pontos(estrelas, true);
+
+    // Nuvens e poeira são milhares de pontos largos um sobre o outro: dezenas
+    // de telas de pintura por quadro, e o maior peso da abertura no celular.
+    // Como só giram junto com a galáxia, são pintadas uma vez, vistas de cima,
+    // numa textura que vira um plano só.
+    const S = R * 1.3;
+    const lado = leve ? 512 : 1024;
+    const alvo = new THREE.WebGLRenderTarget(lado, lado, {
+      depthBuffer: false,
+      generateMipmaps: true,
+      minFilter: THREE.LinearMipmapLinearFilter,
+    });
+    const cam = new THREE.OrthographicCamera(-S, S, S, -S, 1, 400);
+    cam.position.set(0, 100, 0);
+    cam.up.set(0, 0, -1);
+    cam.lookAt(0, 0, 0);
+    const pintura = new THREE.Scene();
+    const camadas = [pontos(nuvens, true), pontos(poeira, false)];
+    for (const camada of camadas) {
+      const mat = camada.material as THREE.ShaderMaterial;
+      mat.uniforms.uEscala.value = (100 * lado) / (2 * S);
+      mat.uniforms.uMaximo.value = lado;
+      pintura.add(camada);
+    }
+    this.renderer.setRenderTarget(alvo);
+    this.renderer.setClearColor(0x000000, 1);
+    this.renderer.clear();
+    this.renderer.render(pintura, cam);
+    this.renderer.setRenderTarget(null);
+    this.renderer.setClearColor(0x050913, 1);
+    for (const camada of camadas) {
+      camada.geometry.dispose();
+      (camada.material as THREE.Material).dispose();
+    }
+    this.assados.push(alvo);
+
+    this.discoMat = new THREE.ShaderMaterial({
+      vertexShader: VERT_DISCO,
+      fragmentShader: FRAG_DISCO,
+      uniforms: { uMapa: { value: alvo.texture }, uAlfa: { value: 1 } },
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const plano = new THREE.Mesh(new THREE.PlaneGeometry(S * 2, S * 2), this.discoMat);
+    plano.rotation.x = -Math.PI / 2;
+    this.galaxiaGiro.add(plano);
+
+    const pontosDeEstrela = pontos(estrelas, true);
+    this.galaxiaMat = pontosDeEstrela.material as THREE.ShaderMaterial;
+    this.galaxiaEstrelas = pontosDeEstrela.geometry;
+    this.galaxiaGiro.add(pontosDeEstrela);
   }
 
   dimensionar(largura: number, altura: number) {
     this.largura = largura;
     this.altura = altura;
-    // DPR baixo de propósito: a torre 3D de outro projeto, com DPR alto e
-    // render sempre ligado, ficou "travada" na mão do cliente.
-    this.dpr = Math.min(window.devicePixelRatio || 1, this.leve ? 1 : this.dprMax);
+    // DPR baixo de propósito, e `reduzir` baixa mais se o aparelho não segurar.
+    this.dpr = Math.min(window.devicePixelRatio || 1, this.dprMax);
     this.renderer.setPixelRatio(this.dpr);
     this.renderer.setSize(largura, altura, false);
     this.camera.aspect = largura / altura;
@@ -522,18 +759,30 @@ export class Mundo {
     this.galaxiaCam.updateProjectionMatrix();
     // Quantos pixels mede uma unidade a uma unidade de distância.
     const escala = (altura * this.dpr) / (2 * Math.tan(rad(this.camera.fov) / 2));
-    for (const m of this.galaxiaMats) {
-      m.uniforms.uEscala.value = escala;
-      m.uniforms.uMaximo.value = 90 * this.dpr;
+    if (this.galaxiaMat) {
+      this.galaxiaMat.uniforms.uEscala.value = escala;
+      this.galaxiaMat.uniforms.uMaximo.value = 40 * this.dpr;
     }
     this.telaMat.uniforms.uRes.value.set(largura * this.dpr, altura * this.dpr);
     this.estrelasMat.uniforms.uDpr.value = this.dpr;
   }
 
-  /** Máquina que não segurou os primeiros quadros: resolução 1, e só. */
-  aliviar() {
-    this.dprMax = 1;
-    this.dimensionar(this.largura, this.altura);
+  /**
+   * O aparelho não está segurando: um degrau abaixo na resolução e, no último
+   * degrau, metade das estrelas da galáxia. Devolve `false` quando não há mais
+   * o que cortar.
+   */
+  reduzir() {
+    if (this.dprMax > 0.75) {
+      this.dprMax = Math.max(0.75, this.dprMax - 0.25);
+      this.dimensionar(this.largura, this.altura);
+      return true;
+    }
+    if (this.galaxiaEstrelas && this.galaxiaEstrelas.drawRange.count === Infinity) {
+      this.galaxiaEstrelas.setDrawRange(0, Math.floor(this.galaxiaEstrelas.attributes.position.count / 2));
+      return true;
+    }
+    return false;
   }
 
   private posicaoDoFoco(foco: Foco, alvo: THREE.Vector3) {
@@ -570,7 +819,6 @@ export class Mundo {
       const a = p.fase + tempo * p.omega;
       p.grupo.position.set(Math.cos(a) * p.orbita, Math.sin(a) * p.orbita * p.inclinacao, Math.sin(a) * p.orbita);
       p.corpo.rotation.y = tempo * 0.06;
-      p.material.uniforms.uTempo.value = tempo;
     }
     this.cinturao.rotation.y = tempo * 0.004;
     this.nucleoMat.uniforms.uTempo.value = tempo;
@@ -615,18 +863,20 @@ export class Mundo {
     const dy = retrato ? this.altura * 0.2 + oy * this.altura : oy * this.altura;
     this.camera.setViewOffset(this.largura, this.altura, dx, dy, this.largura, this.altura);
 
-    // Projeções para as etiquetas dos planetas.
-    this.camera.updateMatrixWorld();
-    E.projecoes = this.planetas.map((p) => {
-      this.v.copy(p.grupo.position).project(this.camera);
-      const visivel = this.v.z < 1 && Math.abs(this.v.x) < 1.1 && Math.abs(this.v.y) < 1.1;
-      return {
-        x: (this.v.x * 0.5 + 0.5) * this.largura,
-        y: (-this.v.y * 0.5 + 0.5) * this.altura,
-        r: p.raio,
-        visivel,
-      };
-    });
+    // Projeções para as etiquetas dos planetas, só na cena que as mostra.
+    if (E.rotulos > 0.001) {
+      this.camera.updateMatrixWorld();
+      E.projecoes = this.planetas.map((p) => {
+        this.v.copy(p.grupo.position).project(this.camera);
+        const visivel = this.v.z < 1 && Math.abs(this.v.x) < 1.1 && Math.abs(this.v.y) < 1.1;
+        return {
+          x: (this.v.x * 0.5 + 0.5) * this.largura,
+          y: (-this.v.y * 0.5 + 0.5) * this.altura,
+          r: p.raio,
+          visivel,
+        };
+      });
+    }
 
     // A Via Láctea, com câmera própria: a distância cai em escala logarítmica
     // (linear, o fim do zoom seria um salto), e o olhar sai do centro da galáxia
@@ -640,7 +890,11 @@ export class Mundo {
     if (g > 0.001) {
       this.galaxiaGiro.rotation.y = tempo * 0.004;
       const aGalaxia = 1 - THREE.MathUtils.smoothstep(z, 0.7, 0.95);
-      for (const m of this.galaxiaMats) m.uniforms.uAlfa.value = aGalaxia;
+      if (this.galaxiaMat) this.galaxiaMat.uniforms.uAlfa.value = aGalaxia;
+      // O disco pintado borra de perto: sai antes, e quem assume são as estrelas.
+      if (this.discoMat) {
+        this.discoMat.uniforms.uAlfa.value = 1 - THREE.MathUtils.smoothstep(z, 0.3, 0.68);
+      }
       (this.miolo.material as THREE.SpriteMaterial).opacity = 0.55 * aGalaxia;
       const sol = this.solDaGalaxia.material as THREE.SpriteMaterial;
       sol.opacity = THREE.MathUtils.smoothstep(z, 0.2, 0.5) * aGalaxia;
@@ -662,6 +916,13 @@ export class Mundo {
       cam.setViewOffset(this.largura, this.altura, dx, dy, this.largura, this.altura);
     }
 
+    // O nome: as estrelas se juntam ao carregar e fogem no começo do zoom.
+    if (this.nomeInicio < 0) this.nomeInicio = tempo;
+    const nome = this.nomeMat.uniforms;
+    nome.uForma.value = Math.min(1, (tempo - this.nomeInicio) / 2.8);
+    nome.uFuga.value = THREE.MathUtils.smoothstep(z, 0, 0.2);
+    nome.uTempo.value = tempo;
+
     // Camada de atmosfera.
     const u = this.telaMat.uniforms;
     u.uTempo.value = tempo;
@@ -681,6 +942,7 @@ export class Mundo {
       this.renderer.render(this.galaxia, this.galaxiaCam);
       this.renderer.clearDepth();
     }
+    if (!E.linear && nome.uFuga.value < 0.999) this.renderer.render(this.nomeCena, this.telaCam);
     // Longe demais, o sistema é menos que um pixel: não precisa ser desenhado.
     if (E.atmos < 0.999 && g < 0.9) this.renderer.render(this.cena, this.camera);
     const camada = E.atmos > 0.001 || E.plasma > 0.001 || E.rastro > 0.001 || u.uRadial.value > 0.001;
@@ -700,6 +962,12 @@ export class Mundo {
       malha.geometry?.dispose();
       (malha.material as THREE.Material | undefined)?.dispose();
     });
+    this.nomeCena.traverse((obj) => {
+      const malha = obj as THREE.Points;
+      malha.geometry?.dispose();
+      (malha.material as THREE.Material | undefined)?.dispose();
+    });
+    for (const alvo of this.assados) alvo.dispose();
     this.telaMat.dispose();
     this.renderer.dispose();
   }

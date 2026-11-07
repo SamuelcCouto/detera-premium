@@ -17,7 +17,7 @@
 export type Foco = "sistema" | "nucleo" | 0 | 1 | 2 | 3 | 4;
 
 /** Como o cartão chega e sai da cena. */
-export type Entrada = "lateral" | "queda";
+export type Entrada = "lateral" | "queda" | "parada";
 
 export type Lado = "esq" | "dir" | "centro";
 
@@ -95,14 +95,14 @@ const NAO_HERDA: (keyof Cena)[] = ["rastro", "rotulos", "nuvens", "viagem", "hol
 const ROTEIRO: Parcial[] = [
   // A apresentação na Via Láctea. A viagem daqui é a primeira transição: o
   // zoom atravessa a galáxia até o sistema solar, e por isso é a mais longa.
-  { id: "topo", hold: 12, viagem: 190, galaxia: 1, dist: 1300, az: 28, el: 30, ox: 0.2, entrada: "queda" },
+  { id: "topo", hold: 12, viagem: 190, galaxia: 1, dist: 1300, az: 28, el: 30, oy: 0.14, lado: "centro", entrada: "parada" },
 
   // O sistema solar: cada planeta é um projeto.
-  { id: "projetos", hold: 22, galaxia: 0, dist: 98, az: 28, el: 27, ox: 0.2, rotulos: 1 },
+  { id: "projetos", hold: 22, galaxia: 0, dist: 98, az: 28, el: 27, ox: 0.2, oy: 0, lado: "esq", entrada: "lateral", rotulos: 1 },
   { id: "projeto-sencis", foco: 0, dist: 6.4, az: 38, el: 10, ox: -0.25, lado: "dir" },
   { id: "projeto-fidele", foco: 1, dist: 14, az: -32, el: 20, ox: 0.25, lado: "esq" },
   { id: "projeto-yasmin", foco: 2, dist: 7.8, az: 62, el: -6, ox: -0.22, lado: "dir" },
-  { id: "projeto-keepnew", foco: 3, dist: 6.6, az: 24, el: 12, ox: 0.2, lado: "esq" },
+  { id: "projeto-keepnew", foco: 3, dist: 7.6, az: 24, el: 12, ox: 0.25, lado: "esq" },
 
   // O que a DETERA faz, junto do núcleo que dá nome à empresa.
   { id: "solucoes", foco: "nucleo", dist: 36, az: 140, el: 34, ox: 0.26, lado: "esq", painel: true },

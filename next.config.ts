@@ -27,11 +27,9 @@ function montarCsp(desenvolvimento: boolean): string {
       desenvolvimento ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""
     }`,
     "style-src 'self' 'unsafe-inline'",
-    // A única imagem externa é a prévia do Yasmin G Studio.
-    "img-src 'self' data: https://yasmin-g-studio.vercel.app",
+    "img-src 'self' data:",
     "font-src 'self'",
-    // A única página de terceiro embutida é a prévia ao vivo do Keep New.
-    "frame-src https://keepnew.vercel.app",
+    "frame-src 'none'",
     `connect-src 'self'${desenvolvimento ? " ws: wss:" : ""}`,
     "form-action 'self'",
     "base-uri 'self'",

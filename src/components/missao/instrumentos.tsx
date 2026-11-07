@@ -30,19 +30,32 @@ export function Instrumentos() {
 
   useEffect(() => {
     const html = document.documentElement;
+    let altVisivel = -1;
+    let leituraAnterior = -1;
+    let rotulosAcesos = true;
+
     const tique = () => {
       const linear = html.classList.contains("linear");
 
       if (altimetro.current && leitura.current) {
-        const vis = linear ? 0 : E.altVisivel;
-        altimetro.current.style.opacity = vis.toFixed(3);
-        altimetro.current.style.visibility = vis < 0.01 ? "hidden" : "visible";
-        if (vis > 0.01) leitura.current.textContent = `${Math.round(E.alt)} km`;
+        const vis = linear ? 0 : Math.round(E.altVisivel * 50) / 50;
+        if (vis !== altVisivel) {
+          altVisivel = vis;
+          altimetro.current.style.opacity = String(vis);
+          altimetro.current.style.visibility = vis < 0.01 ? "hidden" : "visible";
+        }
+        const km = Math.round(E.alt);
+        if (vis > 0.01 && km !== leituraAnterior) {
+          leituraAnterior = km;
+          leitura.current.textContent = `${km} km`;
+        }
       }
 
       // As etiquetas só entram com o sistema já perto; antes, ele é um ponto.
       const perto = 1 - Math.min(1, Math.max(0, (E.galaxia - 0.03) / 0.12));
       const vis = linear ? 0 : E.rotulos * perto;
+      if (vis <= 0.02 && !rotulosAcesos) return;
+      rotulosAcesos = vis > 0.02;
       E.projecoes.forEach((p, i) => {
         const etiqueta = etiquetas.current[i];
         const linha = linhas.current[i];

@@ -15,10 +15,11 @@ import { definirDestino, gsap, obterLenis } from "@/lib/motion";
  * errados), a posição sai de uma conta: onde está a rolagem dentro da missão,
  * em svh, comparada com o início de cada cena.
  *
- * Aos cartões chega só a posição relativa a cada um (`--d`, de -1 a 1) e duas
- * derivadas dela (`--q`, a queda com gravidade; `--o`, a opacidade); o CSS de
- * cada tipo de entrada decide o desenho. Só os dois ou três cartões perto da
- * posição atual são escritos a cada quadro.
+ * Cada cartão perto da posição atual recebe `transform` e `opacity` direto, e
+ * nada mais: são as duas propriedades que a GPU compõe sem o navegador
+ * recalcular estilo. A primeira versão escrevia variáveis CSS nos cartões e no
+ * `<html>` a cada quadro; variável herda, então a página inteira tinha o estilo
+ * recalculado o tempo todo, e era isso que mais travava no celular.
  */
 export function Roteiro() {
   useEffect(() => {
@@ -86,15 +87,24 @@ export function Roteiro() {
       }
     }
 
+    const cabecalho = document.querySelector<HTMLElement>(".cabecalho");
+    const estreito = window.matchMedia("(max-width: 760px), (max-aspect-ratio: 4/5)");
     const ativos = new Set<HTMLElement>();
     let anterior = -1;
+    let plasmaAnterior = -1;
+
+    const tirarDeCena = (cena: HTMLElement) => {
+      cena.dataset.fora = "";
+      const cartao = cena.firstElementChild as HTMLElement;
+      cartao.style.removeProperty("transform");
+      cartao.style.removeProperty("opacity");
+      cartao.style.removeProperty("will-change");
+      ativos.delete(cena);
+    };
 
     const tique = (tempo: number) => {
       if (html.classList.contains("linear")) {
-        if (ativos.size) {
-          ativos.forEach((c) => c.removeAttribute("style"));
-          ativos.clear();
-        }
+        if (ativos.size) [...ativos].forEach(tirarDeCena);
         palco.style.removeProperty("transform");
         interpolar(0);
         return;
@@ -106,23 +116,20 @@ export function Roteiro() {
         anterior = s;
         interpolar(s);
 
-        for (const cartao of cartoes) {
-          const i = Number(cartao.dataset.cena);
+        for (const cena of cartoes) {
+          const i = Number(cena.dataset.cena);
           const d = s - i;
-          if (Math.abs(d) >= 1) {
-            if (ativos.has(cartao)) {
-              cartao.style.setProperty("--d", d < 0 ? "-1" : "1");
-              cartao.style.setProperty("--q", d < 0 ? "-1" : "1");
-              cartao.style.setProperty("--o", "0");
-              cartao.dataset.fora = "";
-              ativos.delete(cartao);
-            }
+          const a = Math.abs(d);
+          // Da metade da viagem para lá o cartão já está invisível.
+          if (a >= 0.5) {
+            if (ativos.has(cena)) tirarDeCena(cena);
             continue;
           }
-          // Queda com gravidade: chega acelerando (posição ∝ tempo²) e sai
-          // caindo do repouso, também acelerando.
-          const q = d < 0 ? -1 + (1 + d) * (1 + d) : d * d;
-          const a = Math.abs(d);
+          if (!ativos.has(cena)) {
+            delete cena.dataset.fora;
+            (cena.firstElementChild as HTMLElement).style.willChange = "transform, opacity";
+            ativos.add(cena);
+          }
           // O cartão que sai some cedo e o que chega aparece tarde: no meio da
           // viagem a tela é só da cena. Com a mesma curva para os dois, eles se
           // cruzavam no centro e um texto passava por cima do outro.
@@ -130,17 +137,27 @@ export function Roteiro() {
             d > 0
               ? 1 - Math.min(1, Math.max(0, (a - 0.04) / 0.34))
               : 1 - Math.min(1, Math.max(0, (a - 0.12) / 0.36));
-          cartao.style.setProperty("--d", d.toFixed(4));
-          cartao.style.setProperty("--q", q.toFixed(4));
-          cartao.style.setProperty("--o", o.toFixed(3));
-          if (a < 0.5) delete cartao.dataset.fora;
-          else cartao.dataset.fora = "";
-          ativos.add(cartao);
+          const cartao = cena.firstElementChild as HTMLElement;
+          cartao.style.opacity = o.toFixed(3);
+          if (cena.dataset.entrada === "queda") {
+            // Queda com gravidade: chega acelerando (posição ∝ tempo²) e sai
+            // caindo do repouso, também acelerando.
+            const q = d < 0 ? -1 + (1 + d) * (1 + d) : d * d;
+            cartao.style.transform = `translate3d(0, ${(q * 72).toFixed(2)}svh, 0)`;
+          } else if (cena.dataset.entrada === "lateral") {
+            // Lateral: chega de um lado e sai pelo outro, no sentido da viagem.
+            const longe = estreito.matches ? 70 : 36;
+            cartao.style.transform = `translate3d(${(d * -longe).toFixed(2)}vw, 0, 0)`;
+          }
         }
       }
 
       // O cabeçalho escurece por trás quando o plasma toma as bordas da tela.
-      html.style.setProperty("--plasma", E.plasma.toFixed(3));
+      const plasma = Math.round(E.plasma * 50) / 50;
+      if (cabecalho && plasma !== plasmaAnterior) {
+        plasmaAnterior = plasma;
+        cabecalho.style.backgroundColor = plasma > 0 ? `rgb(5 9 19 / ${(plasma * 0.9).toFixed(2)})` : "";
+      }
 
       // O quadro inteiro treme na reentrada, cartões junto.
       if (E.tremor > 0.01) {

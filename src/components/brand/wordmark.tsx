@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 import {
   ALTURA_LETRAS,
   MARCA_LINHA,
@@ -44,13 +42,8 @@ export function Simbolo({ className }: { className?: string }) {
 
 /**
  * O nome "DETERA" desenhado: seis caminhos de `NOME_DETERA`, não uma fonte.
- *
- * Com `caindo` (a primeira cena), cada letra recebe a posição na fila em
- * `--i` e a classe `letra-cai`: o CSS faz a queda com gravidade ao carregar.
- * A queda mora na letra e o movimento da cena mora no cartão em volta dela,
- * então a rolagem nunca grava o meio da queda como ponto de partida.
  */
-export function Letreiro({ className, caindo = false }: { className?: string; caindo?: boolean }) {
+export function Letreiro({ className }: { className?: string }) {
   return (
     <svg
       viewBox={`0 0 716 ${ALTURA_LETRAS}`}
@@ -60,12 +53,7 @@ export function Letreiro({ className, caindo = false }: { className?: string; ca
     >
       <g fill="currentColor" fillRule="evenodd">
         {NOME_DETERA.map((letra, indice) => (
-          <path
-            key={indice}
-            d={letra.d}
-            className={caindo ? "letra-cai" : undefined}
-            style={caindo ? ({ "--i": indice } as CSSProperties) : undefined}
-          />
+          <path key={indice} d={letra.d} />
         ))}
       </g>
     </svg>

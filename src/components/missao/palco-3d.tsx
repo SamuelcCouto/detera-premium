@@ -57,8 +57,6 @@ export function Palco3D() {
       window.addEventListener("pointermove", aoMover, { passive: true });
 
       const reduzido = prefereMenosMovimento();
-      const inicio = performance.now();
-      E.chegada = reduzido || html.classList.contains("linear") ? 1 : 0;
 
       // Desempenho: se os primeiros quadros passam de ~28 ms em média, a cena
       // passa ao modo de resolução 1 sem avisar ninguém.
@@ -70,7 +68,6 @@ export function Palco3D() {
       const tique = (tempo: number, delta: number) => {
         if (document.hidden) return;
         E.linear = html.classList.contains("linear");
-        if (E.chegada < 1) E.chegada = Math.min(1, (performance.now() - inicio) / 3200);
 
         const dt = Math.min(delta, 50) / 1000;
         if (!reduzido) {

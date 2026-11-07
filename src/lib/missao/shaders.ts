@@ -123,13 +123,13 @@ void main() {
   float luz = dot(N, L);
   float dif = max(luz, 0.0);
   float dia = smoothstep(-0.08, 0.32, luz);
-  vec3 cena = cor * (0.035 + 1.15 * dif);
+  vec3 cena = cor * (0.1 + 1.1 * dif);
 
   if (uTipo > 1.5 && uTipo < 2.5) {
     vec3 q = vO * 70.0;
     float h = hash3(floor(q));
     float cidade = step(0.9, h) * smoothstep(0.42, 0.66, fbm3(o * 3.0));
-    cena += vec3(1.0, 0.36, 0.26) * cidade * (1.0 - dia) * 1.4;
+    cena += uCorC * cidade * (1.0 - dia) * 1.4;
   }
 
   float fr = pow(1.0 - max(dot(N, V), 0.0), 3.0);
@@ -194,6 +194,7 @@ void main() {
 `;
 
 export const FRAG_CEU = /* glsl */ `
+uniform float uAlfa;
 varying vec3 vD;
 ${RUIDO_3D}
 void main() {
@@ -205,7 +206,7 @@ void main() {
   vec3 cor = mix(base, neb, mascara);
   float poeira = smoothstep(0.6, 0.85, fbm3(vD * 3.1 + 4.0)) * smoothstep(-0.2, 0.4, vD.y);
   cor += vec3(0.16, 0.05, 0.03) * poeira * 0.35;
-  gl_FragColor = vec4(cor, 1.0);
+  gl_FragColor = vec4(cor, uAlfa);
 }
 `;
 
@@ -217,13 +218,14 @@ attribute float aFase;
 attribute vec3 aCor;
 uniform float uTempo;
 uniform float uDpr;
+uniform float uAlfa;
 varying vec3 vCor;
 varying float vBrilho;
 void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mv;
   float pisca = 0.72 + 0.28 * sin(uTempo * (0.6 + aFase * 1.8) + aFase * 40.0);
-  vBrilho = pisca;
+  vBrilho = pisca * uAlfa;
   vCor = aCor;
   gl_PointSize = clamp(aTam * uDpr * (260.0 / -mv.z), 1.0, 6.0 * uDpr);
 }
@@ -237,6 +239,43 @@ void main() {
   float d = length(c);
   float a = smoothstep(0.5, 0.0, d);
   gl_FragColor = vec4(vCor * vBrilho * a, a);
+}
+`;
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * A Via Láctea: pontos com tamanho em unidades do mundo, para o zoom ser de
+ * verdade (o que está perto cresce). Quem passa rente à câmera some antes de
+ * virar um disco na frente da tela.
+ */
+export const VERT_GALAXIA = /* glsl */ `
+attribute float aTam;
+attribute float aAlfa;
+attribute vec3 aCor;
+uniform float uEscala;
+uniform float uMaximo;
+uniform float uAlfa;
+varying vec3 vCor;
+varying float vA;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  float d = -mv.z;
+  gl_PointSize = clamp(aTam * uEscala / d, 1.0, uMaximo);
+  vCor = aCor;
+  vA = aAlfa * uAlfa * smoothstep(0.12, 1.1, d);
+}
+`;
+
+export const FRAG_GALAXIA = /* glsl */ `
+varying vec3 vCor;
+varying float vA;
+void main() {
+  float d = length(gl_PointCoord - 0.5) * 2.0;
+  float a = (1.0 - smoothstep(0.0, 1.0, d));
+  a *= a * vA;
+  gl_FragColor = vec4(vCor, a);
 }
 `;
 
@@ -265,9 +304,7 @@ uniform float uCeu;
 uniform float uPlasma;
 uniform float uNuvens;
 uniform float uRelevo;
-uniform float uRelevoX;
 uniform float uRastro;
-uniform float uSentido;
 uniform float uRadial;
 uniform vec2 uTremor;
 varying vec2 vUv;
@@ -291,7 +328,7 @@ void main() {
     float h = uv.y;
     vec3 crep = mix(vec3(0.94, 0.5, 0.27), vec3(0.15, 0.21, 0.44), smoothstep(0.27, 0.6, h));
     crep = mix(crep, vec3(0.025, 0.05, 0.13), smoothstep(0.58, 1.0, h));
-    vec2 sol = vec2(0.5 - uRelevoX * 0.05, 0.3);
+    vec2 sol = vec2(0.5, 0.3);
     float ds = length((uv - sol) * vec2(asp, 1.0));
     crep += vec3(1.0, 0.6, 0.33) * exp(-ds * 8.0) * 0.8;
     crep += vec3(1.0, 0.86, 0.62) * smoothstep(0.034, 0.024, ds);
@@ -313,9 +350,9 @@ void main() {
     if (uRelevo > 0.001) {
       float desce = (1.0 - uRelevo) * 0.45;
       float x = uv.x * asp;
-      float longe = crista(x * 1.6 + uRelevoX * 0.35, 0.3, 0.06, 2.3) - desce;
-      float meio = crista(x * 2.4 + uRelevoX * 0.8 + 5.0, 0.21, 0.07, 6.1) - desce;
-      float perto = crista(x * 3.4 + uRelevoX * 1.6 + 11.0, 0.11, 0.08, 9.7) - desce;
+      float longe = crista(x * 1.6, 0.3, 0.06, 2.3) - desce;
+      float meio = crista(x * 2.4 + 5.0, 0.21, 0.07, 6.1) - desce;
+      float perto = crista(x * 3.4 + 11.0, 0.11, 0.08, 9.7) - desce;
       vec3 bruma = mix(vec3(0.94, 0.5, 0.27), vec3(0.15, 0.21, 0.44), 0.55);
       if (uv.y < longe) base = mix(bruma, vec3(0.08, 0.09, 0.2), 0.55);
       if (uv.y < meio) base = vec3(0.045, 0.055, 0.12);
@@ -346,9 +383,8 @@ void main() {
     float hc = hash21(vec2(cx, 3.1));
     float vel = 0.7 + hc * 1.6;
     float fase = hash21(vec2(cx, 7.7));
-    float y = fract(uv.y * 0.65 - uTempo * vel * uSentido * 0.9 + fase);
-    float cabeca = uSentido > 0.0 ? y : 1.0 - y;
-    float risco = smoothstep(0.8, 0.99, cabeca) * (1.0 - step(0.995, cabeca));
+    float y = fract(uv.y * 0.65 - uTempo * vel * 0.9 + fase);
+    float risco = smoothstep(0.8, 0.99, y) * (1.0 - step(0.995, y));
     float largura = 1.0 - smoothstep(0.0, 0.09, abs(fract(uv.x * colunas) - 0.5));
     float k = risco * largura * step(0.5, hc) * uRastro;
     vec3 rc = mix(vec3(0.72, 0.84, 1.0), vec3(1.0, 0.56, 0.3), clamp(uPlasma, 0.0, 1.0));

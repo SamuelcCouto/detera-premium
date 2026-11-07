@@ -69,16 +69,16 @@ function construirConfig(desenvolvimento: boolean): NextConfig {
      */
     async redirects() {
       return [
-        { source: "/sobre", destination: "/#sobre", permanent: false },
+        { source: "/sobre", destination: "/#solucoes", permanent: false },
         { source: "/servicos", destination: "/#solucoes", permanent: false },
         { source: "/solucoes", destination: "/#solucoes", permanent: false },
         { source: "/projetos", destination: "/#projetos", permanent: false },
         {
           source: "/como-funciona",
-          destination: "/#processo",
+          destination: "/#solucoes",
           permanent: false,
         },
-        { source: "/processo", destination: "/#processo", permanent: false },
+        { source: "/processo", destination: "/#solucoes", permanent: false },
         { source: "/contato", destination: "/#contato", permanent: false },
       ];
     },

@@ -6,6 +6,7 @@ import {
   comOitavas,
   FRAG_CEU,
   FRAG_ESTRELAS,
+  FRAG_GALAXIA,
   FRAG_HALO,
   FRAG_NUCLEO,
   FRAG_PLANETA,
@@ -13,20 +14,23 @@ import {
   VERT_CEU,
   VERT_ESFERA,
   VERT_ESTRELAS,
+  VERT_GALAXIA,
   VERT_HALO,
   VERT_TELA,
 } from "@/lib/missao/shaders";
 import { criarGerador } from "@/lib/utils/aleatorio";
 
 /**
- * O sistema DETERA em Three.js: o núcleo vermelho na origem e as quatro
- * frentes em órbita, o cinturão entre a segunda e a terceira, a trajetória do
- * processo em volta do planeta azul e a camada de atmosfera por cima.
+ * O cosmos da missão em Three.js. São duas cenas em escalas que não cabem no
+ * mesmo espaço: a Via Láctea, com câmera própria que se aproxima em escala
+ * logarítmica, e o sistema solar, com o núcleo vermelho na origem e um planeta
+ * por projeto. As duas se encontram no ponto em que o Sol da galáxia está no
+ * centro da tela e o núcleo do sistema também. Por cima, a camada de atmosfera.
  *
- * A câmera não tem animação própria. A cada quadro ela é calculada a partir
- * das duas cenas vizinhas do roteiro (`E.a`, `E.b`, `E.t`): cada uma diz para
- * onde olhar e de onde, e a mistura entre as duas é a viagem. Como os planetas
- * se movem, a pose de cada cena é recalculada ao vivo e a câmera acompanha.
+ * A câmera do sistema não tem animação própria. A cada quadro ela é calculada
+ * a partir das duas cenas vizinhas do roteiro (`E.a`, `E.b`, `E.t`): cada uma
+ * diz para onde olhar e de onde, e a mistura entre as duas é a viagem. Como os
+ * planetas se movem, a pose de cada cena é recalculada ao vivo.
  */
 
 type Planeta = {
@@ -40,18 +44,24 @@ type Planeta = {
   material: THREE.ShaderMaterial;
 };
 
+/** Um planeta por projeto, na cor do mundo de cada um; o último, azul, é o próximo. */
 const PLANETAS = [
-  // Presença digital: dunas cor de ferrugem.
-  { raio: 1.5, orbita: 16, fase: 0.7, inclinacao: 0.05, tipo: 0, a: "#4f231c", b: "#b5563a", c: "#e9a774", atm: "#ff7a55" },
-  // Crescimento: gigante de gás âmbar, com anel.
-  { raio: 2.7, orbita: 25, fase: 2.5, inclinacao: -0.04, tipo: 1, a: "#5e3a22", b: "#c98f52", c: "#f2d6a2", atm: "#ffcf8a" },
-  // Tecnologia: gelo, com luzes de cidade no lado escuro.
-  { raio: 1.8, orbita: 35, fase: 4.2, inclinacao: 0.07, tipo: 2, a: "#34455c", b: "#b3c6da", c: "#ffffff", atm: "#bfd6ff" },
-  // Infraestrutura: o planeta azul, onde a missão pousa.
-  { raio: 2.3, orbita: 45, fase: 5.6, inclinacao: -0.03, tipo: 3, a: "#08183f", b: "#1d4fae", c: "#2c5a46", atm: "#4c7dff" },
+  // Sencis: porcelana e o dourado do letreiro da clínica.
+  { raio: 1.5, orbita: 16, fase: 0.7, inclinacao: 0.05, tipo: 0, a: "#6b5a44", b: "#d9c7a6", c: "#f6ecd8", atm: "#ffe0a8" },
+  // FIDÈLE: gigante rosa com anel, a tinta da marca.
+  { raio: 2.7, orbita: 25, fase: 2.5, inclinacao: -0.04, tipo: 1, a: "#2a141d", b: "#c8557a", c: "#f4c6d4", atm: "#ff8fb0" },
+  // Yasmin: preto e dourado, com a luz no lado escuro.
+  { raio: 1.8, orbita: 35, fase: 4.2, inclinacao: 0.07, tipo: 2, a: "#17120a", b: "#a98538", c: "#ffcf6a", atm: "#e6c46a" },
+  // Keep New: aço com ferrugem de máquina.
+  { raio: 2, orbita: 45, fase: 5.6, inclinacao: -0.03, tipo: 0, a: "#26292e", b: "#737b85", c: "#d9702c", atm: "#ff9d5c" },
+  // O planeta azul, onde a missão pousa: o próximo projeto.
+  { raio: 2.3, orbita: 56, fase: 1.4, inclinacao: 0.04, tipo: 3, a: "#08183f", b: "#1d4fae", c: "#2c5a46", atm: "#4c7dff" },
 ] as const;
 
-const CINTURAO = { raio: 30, largura: 2.6, angulo: 0.62 };
+const CINTURAO = { raio: 30, largura: 2.6 };
+
+/** Tamanho da Via Láctea, e onde o Sol fica nela: num braço, longe do centro. */
+const GALAXIA = { raio: 100, sol: new THREE.Vector3(53, 0.4, -24) };
 
 const cor = (hex: string) => new THREE.Color(hex);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -68,11 +78,13 @@ export class Mundo {
   private estrelasMat: THREE.ShaderMaterial;
   private planetas: Planeta[] = [];
   private cinturao: THREE.InstancedMesh;
-  private trajeto: THREE.Group;
-  private trajetoFeito: THREE.Line;
-  private trajetoPontos: THREE.Vector3[] = [];
-  private capsula: THREE.Mesh;
-  private queimas: THREE.Mesh[] = [];
+  private ceuMat: THREE.ShaderMaterial;
+  private galaxia = new THREE.Scene();
+  private galaxiaCam = new THREE.PerspectiveCamera(42, 1, 0.02, 1200);
+  private galaxiaGiro = new THREE.Group();
+  private galaxiaMats: THREE.ShaderMaterial[] = [];
+  private miolo: THREE.Sprite;
+  private solDaGalaxia: THREE.Sprite;
   private largura = 1;
   private altura = 1;
   private dpr = 1;
@@ -96,15 +108,15 @@ export class Mundo {
     this.renderer.setClearColor(0x050913, 1);
 
     // Céu de fundo.
-    const ceu = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 32, 16),
-      new THREE.ShaderMaterial({
-        vertexShader: VERT_CEU,
-        fragmentShader: comOitavas(FRAG_CEU, leve ? 3 : 4),
-        side: THREE.BackSide,
-        depthWrite: false,
-      }),
-    );
+    this.ceuMat = new THREE.ShaderMaterial({
+      vertexShader: VERT_CEU,
+      fragmentShader: comOitavas(FRAG_CEU, leve ? 3 : 4),
+      uniforms: { uAlfa: { value: 1 } },
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false,
+    });
+    const ceu = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), this.ceuMat);
     ceu.scale.setScalar(2000);
     ceu.renderOrder = -1;
     ceu.frustumCulled = false;
@@ -137,7 +149,7 @@ export class Mundo {
     this.estrelasMat = new THREE.ShaderMaterial({
       vertexShader: VERT_ESTRELAS,
       fragmentShader: FRAG_ESTRELAS,
-      uniforms: { uTempo: { value: 0 }, uDpr: { value: 1 } },
+      uniforms: { uTempo: { value: 0 }, uDpr: { value: 1 }, uAlfa: { value: 1 } },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -252,52 +264,37 @@ export class Mundo {
     }
     this.cena.add(this.cinturao);
 
-    // A trajetória do processo em volta do planeta azul: elipse inclinada,
-    // cinco queimas de motor e a cápsula.
-    this.trajeto = new THREE.Group();
-    this.trajeto.rotation.set(0.42, 0, 0.18);
-    for (let i = 0; i <= 240; i++) {
-      const a = (i / 240) * Math.PI * 2;
-      this.trajetoPontos.push(new THREE.Vector3(Math.cos(a) * 6.2, 0, Math.sin(a) * 4.6));
-    }
-    const geoTrajeto = new THREE.BufferGeometry().setFromPoints(this.trajetoPontos);
-    this.trajeto.add(
-      new THREE.Line(
-        geoTrajeto,
-        new THREE.LineBasicMaterial({ color: 0x8fb3ff, transparent: true, opacity: 0.25 }),
-      ),
-    );
-    this.trajetoFeito = new THREE.Line(
-      geoTrajeto.clone(),
-      new THREE.LineBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.95 }),
-    );
-    this.trajeto.add(this.trajetoFeito);
-    for (let i = 0; i < 5; i++) {
-      const queima = new THREE.Mesh(
-        new THREE.SphereGeometry(0.11, 12, 8),
-        new THREE.MeshBasicMaterial({ color: 0x8fb3ff, transparent: true }),
-      );
-      queima.position.copy(this.pontoDoTrajeto(i / 5));
-      this.queimas.push(queima);
-      this.trajeto.add(queima);
-    }
-    this.capsula = new THREE.Mesh(
-      new THREE.SphereGeometry(0.16, 16, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffe2c8 }),
-    );
-    const brilhoCapsula = new THREE.Sprite(
+    // A Via Láctea.
+    this.montarGalaxia(aleatorio, leve);
+    this.miolo = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: brilho,
-        color: 0xff8a3d,
+        color: 0xffc48a,
         transparent: true,
+        opacity: 0.55,
         depthWrite: false,
+        depthTest: false,
         blending: THREE.AdditiveBlending,
       }),
     );
-    brilhoCapsula.scale.setScalar(1.6);
-    this.capsula.add(brilhoCapsula);
-    this.trajeto.add(this.capsula);
-    this.planetas[3].grupo.add(this.trajeto);
+    this.miolo.scale.setScalar(96);
+    this.galaxiaGiro.add(this.miolo);
+    // O Sol: um ponto vermelho no braço, que vira o núcleo do sistema ao chegar.
+    this.solDaGalaxia = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: brilho,
+        color: 0xff5a40,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        depthTest: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    this.solDaGalaxia.scale.setScalar(0.9);
+    this.solDaGalaxia.position.copy(GALAXIA.sol);
+    this.galaxiaGiro.add(this.solDaGalaxia);
+    this.galaxia.add(this.galaxiaGiro);
 
     // A camada de atmosfera.
     this.telaMat = new THREE.ShaderMaterial({
@@ -311,9 +308,7 @@ export class Mundo {
         uPlasma: { value: 0 },
         uNuvens: { value: 0 },
         uRelevo: { value: 0 },
-        uRelevoX: { value: 0 },
         uRastro: { value: 0 },
-        uSentido: { value: 1 },
         uRadial: { value: 0 },
         uTremor: { value: new THREE.Vector2() },
       },
@@ -398,9 +393,117 @@ export class Mundo {
     return linha;
   }
 
-  private pontoDoTrajeto(fracao: number) {
-    const a = fracao * Math.PI * 2;
-    return new THREE.Vector3(Math.cos(a) * 6.2, 0, Math.sin(a) * 4.6);
+  /**
+   * Espiral logarítmica com dois braços fortes e dois fracos, uma barra no
+   * centro, nuvens largas de luz e, por cima, poeira escura na beira de dentro
+   * dos braços, que é o que dá cara de foto de galáxia a um monte de pontos.
+   */
+  private montarGalaxia(aleatorio: () => number, leve: boolean) {
+    const gauss = () => (aleatorio() + aleatorio() + aleatorio() + aleatorio() - 2) / 2;
+    const quente = cor("#ffd6a3");
+    const fria = cor("#c3d2f2");
+    const rosa = cor("#f08a96");
+    const R = GALAXIA.raio;
+    const passo = 1 / Math.tan(rad(14));
+
+    // Um ponto num braço: `larg` é o espalhamento em volta da curva.
+    const noBraco = (larg: number, deslocamento = 0) => {
+      const braco = Math.floor(aleatorio() * 4);
+      const forca = braco % 2 === 0 ? 1 : 0.55;
+      const r = R * (0.14 + 0.86 * Math.pow(aleatorio(), 0.75 + (1 - forca) * 0.5));
+      const ang = (braco * Math.PI) / 2 + Math.log(r / (R * 0.14)) * passo * 0.6 + deslocamento;
+      const e = larg * (0.45 + (r / R) * 0.75);
+      return {
+        x: Math.cos(ang) * r + gauss() * e,
+        z: Math.sin(ang) * r + gauss() * e,
+        r,
+      };
+    };
+
+    type Camada = { pos: number[]; tam: number[]; alfa: number[]; cores: number[] };
+    const nova = (): Camada => ({ pos: [], tam: [], alfa: [], cores: [] });
+    const por = (c: Camada, x: number, y: number, z: number, t: number, a: number, k: THREE.Color) => {
+      c.pos.push(x, y, z);
+      c.tam.push(t);
+      c.alfa.push(a);
+      c.cores.push(k.r, k.g, k.b);
+    };
+    const k = new THREE.Color();
+
+    // Estrelas: braços, disco e o miolo em barra.
+    const estrelas = nova();
+    const total = leve ? 22000 : 60000;
+    for (let i = 0; i < total; i++) {
+      const sorte = aleatorio();
+      if (sorte < 0.5) {
+        const p = noBraco(17);
+        k.copy(quente).lerp(fria, Math.min(1, p.r / (R * 0.6)));
+        if (aleatorio() < 0.025) k.copy(rosa);
+        por(estrelas, p.x, gauss() * 1.8, p.z, 0.16 + aleatorio() * aleatorio() * 0.5, 0.85, k);
+      } else if (sorte < 0.86) {
+        const r = R * Math.pow(aleatorio(), 0.62);
+        const ang = aleatorio() * Math.PI * 2;
+        k.copy(quente).lerp(fria, r / R);
+        por(estrelas, Math.cos(ang) * r, gauss() * 2.4, Math.sin(ang) * r, 0.13 + aleatorio() * 0.12, 0.42, k);
+      } else {
+        // Barra: alongada num eixo, inclinada em relação aos braços.
+        const bx = gauss() * R * 0.26;
+        const bz = gauss() * R * 0.11;
+        por(estrelas, bx * 0.86 - bz * 0.5, gauss() * 5, bx * 0.5 + bz * 0.86, 0.1 + aleatorio() * 0.12, 0.6, quente);
+      }
+    }
+
+    // Nuvens de luz, largas e fracas.
+    const nuvens = nova();
+    const quantas = leve ? 700 : 2200;
+    for (let i = 0; i < quantas; i++) {
+      const p = noBraco(20);
+      k.copy(quente).lerp(fria, Math.min(1, p.r / (R * 0.7)));
+      if (aleatorio() < 0.05) k.copy(rosa);
+      por(nuvens, p.x, gauss() * 1.5, p.z, 9 + aleatorio() * 15, 0.07, k);
+    }
+
+    // O brilho difuso do disco, que une os braços: sem ele, é um cata-vento.
+    const disco = leve ? 200 : 500;
+    for (let i = 0; i < disco; i++) {
+      const r = R * Math.pow(aleatorio(), 0.7);
+      const ang = aleatorio() * Math.PI * 2;
+      k.copy(quente).lerp(fria, Math.min(1, r / (R * 0.8)));
+      por(nuvens, Math.cos(ang) * r, 0, Math.sin(ang) * r, 18 + aleatorio() * 16, 0.035, k);
+    }
+
+    // Poeira escura, na beira de dentro dos braços.
+    const poeira = nova();
+    const escura = cor("#05070f");
+    const grao = leve ? 500 : 1500;
+    for (let i = 0; i < grao; i++) {
+      const p = noBraco(7, -0.22);
+      por(poeira, p.x, gauss() * 0.8, p.z, 3 + aleatorio() * 6, 0.3, escura);
+    }
+
+    const pontos = (c: Camada, aditivo: boolean) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(c.pos, 3));
+      geo.setAttribute("aTam", new THREE.Float32BufferAttribute(c.tam, 1));
+      geo.setAttribute("aAlfa", new THREE.Float32BufferAttribute(c.alfa, 1));
+      geo.setAttribute("aCor", new THREE.Float32BufferAttribute(c.cores, 3));
+      const mat = new THREE.ShaderMaterial({
+        vertexShader: VERT_GALAXIA,
+        fragmentShader: FRAG_GALAXIA,
+        uniforms: { uEscala: { value: 1 }, uMaximo: { value: 90 }, uAlfa: { value: 1 } },
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        blending: aditivo ? THREE.AdditiveBlending : THREE.NormalBlending,
+      });
+      this.galaxiaMats.push(mat);
+      const p = new THREE.Points(geo, mat);
+      p.frustumCulled = false;
+      this.galaxiaGiro.add(p);
+    };
+    pontos(nuvens, true);
+    pontos(poeira, false);
+    pontos(estrelas, true);
   }
 
   dimensionar(largura: number, altura: number) {
@@ -414,6 +517,15 @@ export class Mundo {
     this.camera.aspect = largura / altura;
     this.camera.fov = largura / altura < 0.8 ? 58 : 42;
     this.camera.updateProjectionMatrix();
+    this.galaxiaCam.aspect = this.camera.aspect;
+    this.galaxiaCam.fov = this.camera.fov;
+    this.galaxiaCam.updateProjectionMatrix();
+    // Quantos pixels mede uma unidade a uma unidade de distância.
+    const escala = (altura * this.dpr) / (2 * Math.tan(rad(this.camera.fov) / 2));
+    for (const m of this.galaxiaMats) {
+      m.uniforms.uEscala.value = escala;
+      m.uniforms.uMaximo.value = 90 * this.dpr;
+    }
     this.telaMat.uniforms.uRes.value.set(largura * this.dpr, altura * this.dpr);
     this.estrelasMat.uniforms.uDpr.value = this.dpr;
   }
@@ -426,13 +538,6 @@ export class Mundo {
 
   private posicaoDoFoco(foco: Foco, alvo: THREE.Vector3) {
     if (foco === "sistema" || foco === "nucleo") return alvo.set(0, 0, 0);
-    if (foco === "cinturao") {
-      return alvo.set(
-        Math.cos(CINTURAO.angulo) * CINTURAO.raio,
-        0,
-        Math.sin(CINTURAO.angulo) * CINTURAO.raio,
-      );
-    }
     return alvo.copy(this.planetas[foco].grupo.position);
   }
 
@@ -441,9 +546,7 @@ export class Mundo {
     this.posicaoDoFoco(cena.foco, alvo);
     // Num corpo fora da origem, o ângulo zero é a câmera do lado do núcleo:
     // a face iluminada de frente.
-    const base = typeof cena.foco === "number" || cena.foco === "cinturao"
-      ? Math.atan2(alvo.z, alvo.x) + Math.PI
-      : 0;
+    const base = typeof cena.foco === "number" ? Math.atan2(alvo.z, alvo.x) + Math.PI : 0;
     const az = base + rad(cena.az);
     const el = rad(cena.el);
     pos.set(
@@ -462,8 +565,6 @@ export class Mundo {
   private cima = new THREE.Vector3();
 
   quadro(tempo: number) {
-    const leve = this.leve;
-
     // Órbitas.
     for (const p of this.planetas) {
       const a = p.fase + tempo * p.omega;
@@ -485,16 +586,10 @@ export class Mundo {
     this.alvo.copy(this.aA).lerp(this.aB, t);
 
     // A viagem não é reta: no meio dela a câmera se afasta e sobe um pouco,
-    // como quem sai da órbita de um corpo e cai na do próximo.
+    // como quem sai da órbita de um corpo e cai na do próximo. Saindo da
+    // galáxia não: ali a distância é de outra escala, e o arco viraria um salto.
     const arco = Math.sin(Math.PI * t) * this.pA.distanceTo(this.pB) * 0.18;
-    pos.y += arco;
-
-    // Chegada: começa longe e desacelera até a pose da primeira cena.
-    const chegada = 1 - Math.pow(1 - E.chegada, 3);
-    if (chegada < 1) {
-      this.v.copy(pos).sub(this.alvo).multiplyScalar((1 - chegada) * 5);
-      pos.add(this.v);
-    }
+    pos.y += arco * (1 - A.galaxia);
 
     const dist = pos.distanceTo(this.alvo);
     this.camera.lookAt(this.alvo);
@@ -520,22 +615,6 @@ export class Mundo {
     const dy = retrato ? this.altura * 0.2 + oy * this.altura : oy * this.altura;
     this.camera.setViewOffset(this.largura, this.altura, dx, dy, this.largura, this.altura);
 
-    // Trajetória do processo.
-    const vis = E.trajetoria;
-    this.trajeto.visible = vis > 0.01;
-    if (this.trajeto.visible) {
-      const fracao = E.orbita / 5;
-      const quantos = Math.max(2, Math.round(fracao * 240) + 1);
-      this.trajetoFeito.geometry.setDrawRange(0, quantos);
-      this.capsula.position.copy(this.pontoDoTrajeto(fracao));
-      this.queimas.forEach((q, i) => {
-        const m = q.material as THREE.MeshBasicMaterial;
-        m.color.set(i <= E.orbita + 0.02 ? 0xff3b3b : 0x8fb3ff);
-        m.opacity = vis;
-      });
-      this.trajeto.scale.setScalar(0.4 + 0.6 * vis);
-    }
-
     // Projeções para as etiquetas dos planetas.
     this.camera.updateMatrixWorld();
     E.projecoes = this.planetas.map((p) => {
@@ -549,6 +628,40 @@ export class Mundo {
       };
     });
 
+    // A Via Láctea, com câmera própria: a distância cai em escala logarítmica
+    // (linear, o fim do zoom seria um salto), e o olhar sai do centro da galáxia
+    // para o Sol enquanto a câmera desce para o plano do disco, girando.
+    const g = E.galaxia;
+    const z = 1 - g;
+    const aSistema = 1 - THREE.MathUtils.smoothstep(g, 0.06, 0.32);
+    this.ceuMat.uniforms.uAlfa.value = aSistema;
+    this.estrelasMat.uniforms.uAlfa.value = aSistema;
+
+    if (g > 0.001) {
+      this.galaxiaGiro.rotation.y = tempo * 0.004;
+      const aGalaxia = 1 - THREE.MathUtils.smoothstep(z, 0.7, 0.95);
+      for (const m of this.galaxiaMats) m.uniforms.uAlfa.value = aGalaxia;
+      (this.miolo.material as THREE.SpriteMaterial).opacity = 0.55 * aGalaxia;
+      const sol = this.solDaGalaxia.material as THREE.SpriteMaterial;
+      sol.opacity = THREE.MathUtils.smoothstep(z, 0.2, 0.5) * aGalaxia;
+
+      this.galaxiaGiro.updateMatrixWorld();
+      this.v.copy(GALAXIA.sol).applyMatrix4(this.galaxiaGiro.matrixWorld);
+      const olhar = THREE.MathUtils.smootherstep(Math.min(1, z * 2.6), 0, 1);
+      this.alvo.set(0, 0, 0).lerp(this.v, olhar);
+      const distG = 205 * Math.pow(0.5 / 205, z);
+      const elG = rad(lerp(56, 18, z));
+      const azG = rad(25 + z * 70);
+      const cam = this.galaxiaCam;
+      cam.position.set(
+        this.alvo.x + distG * Math.cos(elG) * Math.cos(azG) + E.mx * distG * 0.02,
+        this.alvo.y + distG * Math.sin(elG) - E.my * distG * 0.015,
+        this.alvo.z + distG * Math.cos(elG) * Math.sin(azG),
+      );
+      cam.lookAt(this.alvo);
+      cam.setViewOffset(this.largura, this.altura, dx, dy, this.largura, this.altura);
+    }
+
     // Camada de atmosfera.
     const u = this.telaMat.uniforms;
     u.uTempo.value = tempo;
@@ -557,18 +670,20 @@ export class Mundo {
     u.uPlasma.value = E.plasma;
     u.uNuvens.value = E.nuvens;
     u.uRelevo.value = E.relevo;
-    u.uRelevoX.value = E.relevoX;
-    u.uSentido.value = E.sentido;
-    const rapido = Math.min(Math.abs(E.vel) * 0.18, 0.5);
-    u.uRastro.value = Math.min(1, E.rastro + (E.atmos < 0.5 ? rapido : 0));
-    u.uRadial.value = leve ? 0 : 1 - chegada;
+    u.uRastro.value = E.rastro;
+    // O rastro radial é a velocidade da travessia da galáxia.
+    u.uRadial.value = g > 0.001 && g < 0.999 ? Math.sin(Math.PI * z) * 0.75 : 0;
     const k = E.tremor * 0.004;
     u.uTremor.value.set(Math.sin(tempo * 43.0) * k, Math.cos(tempo * 31.0) * k);
 
     this.renderer.clear();
-    if (E.atmos < 0.999) this.renderer.render(this.cena, this.camera);
-    const camada =
-      E.atmos > 0.001 || E.plasma > 0.001 || u.uRastro.value > 0.001 || u.uRadial.value > 0.001;
+    if (g > 0.001) {
+      this.renderer.render(this.galaxia, this.galaxiaCam);
+      this.renderer.clearDepth();
+    }
+    // Longe demais, o sistema é menos que um pixel: não precisa ser desenhado.
+    if (E.atmos < 0.999 && g < 0.9) this.renderer.render(this.cena, this.camera);
+    const camada = E.atmos > 0.001 || E.plasma > 0.001 || E.rastro > 0.001 || u.uRadial.value > 0.001;
     if (camada) this.renderer.render(this.tela, this.telaCam);
   }
 
@@ -579,6 +694,11 @@ export class Mundo {
       const mat = malha.material as THREE.Material | THREE.Material[] | undefined;
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
       else mat?.dispose();
+    });
+    this.galaxia.traverse((obj) => {
+      const malha = obj as THREE.Points;
+      malha.geometry?.dispose();
+      (malha.material as THREE.Material | undefined)?.dispose();
     });
     this.telaMat.dispose();
     this.renderer.dispose();

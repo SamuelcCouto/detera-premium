@@ -1,16 +1,16 @@
 ---
-last_mapped: 2026-11-01T08:21:06Z
+last_mapped: 2026-11-07T06:24:26Z
 total_files: 70
 total_tokens: 87000
 ---
 
 # Mapa do código — DETERA
 
-> Gerado pelo Cartographer. Último mapeamento: 01/11/2026, 08:21 UTC (v3 "Reentrada"). Contagem de tokens estimada (o scanner não rodou nesta máquina).
+> Gerado pelo Cartographer em 01/11/2026 e revisto à mão em 07/11/2026, no enxugamento da v3. Contagem de tokens estimada.
 
 Site institucional de página única da DETERA. Next.js 16 (App Router + Turbopack), React 19, TypeScript estrito, Tailwind CSS v4, Three.js, Lenis e GSAP (só o `ticker`), tudo pelo npm (a CSP bloqueia CDN). Pré-renderizado estático; sem backend. O formulário de contato monta a mensagem e abre o WhatsApp.
 
-A v3 transforma a página numa **missão espacial dirigida pela rolagem**: um canvas Three.js fixo atrás de tudo mostra o sistema DETERA (núcleo vermelho = estrela, quatro frentes = planetas), e um roteiro de cenas move a câmera: chegada, cinturão, travessia entre planetas, reentrada no planeta azul (plasma, tremor, altímetro) com o manifesto, pouso ao crepúsculo com os projetos, órbita do processo e diário de bordo. Plano em [design-plan.md](design-plan.md).
+A v3 transforma a página numa **missão espacial curta dirigida pela rolagem**: a apresentação na Via Láctea, um zoom contínuo até o sistema solar, um planeta por projeto, o que a DETERA faz, o planeta de quem está lendo e a reentrada até o contato. Plano em [design-plan.md](design-plan.md).
 
 ## Visão geral
 
@@ -25,7 +25,7 @@ graph TB
         MissaoC[missao.tsx · servidor<br/>todas as cenas no palco]
         Palco[palco-3d.tsx · client<br/>canvas + import tardio do three]
         Roteiro[roteiro.tsx · client<br/>rolagem → s → --d/--q/--o]
-        Instr[instrumentos.tsx · client<br/>trajetória · altímetro · etiquetas]
+        Instr[instrumentos.tsx · client<br/>altímetro · etiquetas]
         Dossie[dossie.tsx · client<br/>dialog]
     end
     subgraph Lib["lib/missao"]
@@ -58,7 +58,7 @@ src/
 │   ├── layout/           header (client, menu em <dialog>) e footer
 │   ├── missao/           missao (servidor), palco-3d, roteiro, instrumentos, dossie (client)
 │   ├── motion/           smooth-scroll (Lenis + âncoras)
-│   ├── secoes/           perguntas e contato, depois da missão
+│   ├── secoes/           contato, depois da missão
 │   └── ui/               button, container, icones (pixel)
 ├── config/               site.ts, nav.ts
 ├── content/              todo o texto
@@ -69,53 +69,49 @@ src/
     ├── seo/json-ld.tsx
     └── utils/            aleatorio (PRNG com semente), cn, env, whatsapp
 public/fonts/             Oxanium (variável) e Spectral (300, 400, 300 itálico)
-docs/                     este mapa, design-plan.md, identidade/ (manual da marca da v2)
+docs/                     este mapa, design-plan.md, identidade/ (manual da marca da v2, desatualizado)
 ```
 
 ## Módulos
 
 ### Roteiro (`lib/missao/cenas.ts`)
-`ROTEIRO` é uma lista de cenas parciais: cada linha diz só o que muda. `montarCenas` acumula sobre `PADRAO`; `rastro`, `sentido` e `rotulos` não passam adiante (`NAO_HERDA`). Campos: `foco` (sistema, núcleo, cinturão ou planeta 0–3), `dist/az/el`, `ox/oy` (enquadramento fora do centro), `atmos`, `ceu`, `plasma`, `tremor`, `nuvens`, `relevo`, `relevoX`, `alt`, `trajetoria`, `orbita`, `rotulos`, `rastro`, `sentido`, `lado`, `entrada`, `hold` (svh parado). `VIAGEM = 85` svh entre cenas; `medidas()` dá o início de cada cena e a altura total.
+`ROTEIRO` é uma lista de cenas parciais: cada linha diz só o que muda. `montarCenas` acumula sobre `PADRAO`; `rastro`, `rotulos`, `nuvens`, `viagem`, `hold` e `painel` não passam adiante (`NAO_HERDA`). Campos: `foco` (sistema, núcleo ou planeta 0–4), `dist/az/el`, `ox/oy`, `galaxia`, `atmos`, `ceu`, `plasma`, `tremor`, `relevo`, `nuvens`, `alt`, `rotulos`, `rastro`, `lado`, `entrada`, `painel`, `hold` e `viagem` (svh). `medidas()` dá o início de cada cena e a altura total.
 
-| Ato | Cenas (id) |
-|---|---|
-| Chegada | `topo`, `sinais` |
-| Sistema | `solucoes`, `frente-crescimento`, `frente-tecnologia`, `frente-infraestrutura` |
-| Reentrada | `personalidade`, `par-1`…`par-4`, `fecho` |
-| Solo | `projetos`, `case-fidele`, `em-obra` |
-| Trajetória | `processo`, `etapa-2`…`etapa-5` |
-| Diário | `sobre` |
-| Sinal | `sinal` |
+Cenas, em ordem: `topo` (Via Láctea; viagem longa de 190 svh), `projetos` (o sistema), `projeto-sencis`, `projeto-fidele`, `projeto-yasmin`, `projeto-keepnew`, `solucoes` (perto do núcleo), `seu-projeto` (planeta azul), `reentrada`, `sinal` (crepúsculo).
 
 ### Estado (`lib/missao/estado.ts`)
-`E` é um objeto mutável fora do React (lido a cada quadro). `interpolar(s)` escreve as cenas vizinhas `a`, `b`, a mistura `t` (smootherstep) e os canais numéricos; o altímetro segura a última leitura; `rastro = max(B.rastro·sin(π·frac), plasma·0,9)`.
+`E` é um objeto mutável fora do React (lido a cada quadro). `interpolar(s)` escreve as cenas vizinhas `a`, `b`, a mistura `t` (smootherstep) e os canais numéricos; o altímetro segura a última leitura; `rastro = max(B.rastro·sin(π·frac), plasma·0,9)`; `nuvens = B.nuvens·sin(π·frac)`.
 
 ### Rolagem → cena (`components/missao/roteiro.tsx`)
-`.missao` tem `height: calc(var(--total) * 1svh)` e o `.palco` é `sticky` de 100svh com todos os cartões absolutos. A cada tique do `gsap.ticker`: posição local em svh → `s` (inteiro durante a parada, fracionário na viagem) → `interpolar(s)` → para os cartões com `|s - i| < 1`, `--d` (-1..1), `--q` (gravidade: chega com `-1 + (1+d)²`, sai com `d²`) e `--o` (assimétrica: o que sai some cedo, o que chega aparece tarde). Também escreve `--plasma` no `html` (escurece o cabeçalho), `html[data-depois]` (esconde a trilha depois da missão) e o tremor no `transform` do palco. Expõe `window.__missao` para os scripts de QA.
+`.missao` tem `height: calc(var(--total) * 1svh)` e o `.palco` é `sticky` de 100svh com todos os cartões absolutos. A cada tique do `gsap.ticker`: posição local em svh → `s` (inteiro durante a parada, fracionário na viagem) → `interpolar(s)` → para os cartões com `|s - i| < 1`, `--d` (-1..1), `--q` (gravidade: chega com `-1 + (1+d)²`, sai com `d²`) e `--o` (assimétrica: o que sai some cedo, o que chega aparece tarde). Também escreve `--plasma` no `html` (escurece o cabeçalho) e o tremor no `transform` do palco. Expõe `window.__missao` para os scripts de QA.
 
 ### Entradas dos cartões (CSS)
-Só em `html.js:not(.linear)`. `lateral`: `translateX(d · -36vw)` (−70vw no celular); `queda`: `translateY(q · 72svh)`; `orbita`: `rotate(d · -22deg)` em volta de um pivô a −70vw. Cada peça desloca mais um pouco por `--k`. Cenas do ato Solo e todos os cartões no celular ganham painel sólido.
+Só em `html.js:not(.linear)`. `lateral`: `translateX(d · -36vw)` (−70vw no celular); `queda`: `translateY(q · 72svh)`. Cenas com `painel` e todos os cartões no celular ganham fundo sólido.
 
 ### Mundo 3D (`lib/missao/mundo.ts`, `shaders.ts`)
-Núcleo (shader de superfície fervendo + dois sprites de brilho), 4 planetas com shader procedural (dunas, gigante de gás com anel, gelo com luzes de cidade, oceano), halos, órbitas, cinturão em `InstancedMesh`, estrelas em `Points` (casca distante + poeira perto), céu de nebulosa, trajetória do processo em volta do planeta azul (elipse, 5 queimas, cápsula). A câmera mistura ao vivo as poses das duas cenas vizinhas (planetas se movem), sobe em arco no meio da viagem, chega de longe ao carregar, cede ao cursor com mola, treme na reentrada e usa `setViewOffset` (em retrato o objeto sobe). A camada `tela` (quad de tela cheia, blending pré-multiplicado) desenha numa passada: céu da descida e do crepúsculo, nuvens, relevo em 3 cristas, plasma nas bordas (substitui a cor), rastros verticais e o rastro radial da chegada. Escreve `E.projecoes` para as etiquetas.
+**Duas cenas**, porque as escalas não cabem no mesmo espaço:
+- **Via Láctea** (`galaxia`, com `galaxiaCam` própria): `Points` com tamanho em unidades do mundo (o zoom é de verdade), em três camadas: nuvens de luz, poeira escura e estrelas, em espiral logarítmica com barra central, mais um sprite no miolo e o Sol vermelho no braço. A distância cai em escala logarítmica de 205 a 0,5 enquanto o olhar sai do centro para o Sol. No fim, Sol e núcleo do sistema coincidem no centro da tela.
+- **Sistema solar** (`cena`): núcleo, 5 planetas com shader procedural (`PLANETAS`: Sencis, FIDÈLE com anel, Yasmin, Keep New, o azul), halos, órbitas, cinturão em `InstancedMesh`, estrelas e céu (os dois com `uAlfa`, entram no fim do zoom). A câmera mistura ao vivo as poses das duas cenas vizinhas, sobe em arco na viagem, cede ao cursor com mola, treme na reentrada e usa `setViewOffset` (em retrato o objeto sobe).
+
+A camada `tela` (quad de tela cheia, blending pré-multiplicado) desenha por cima: céu da descida e do crepúsculo, nuvens, relevo, plasma nas bordas (substitui a cor), rastros e o rastro radial da travessia. `quadro` escreve `E.projecoes` para as etiquetas.
 
 ### Instrumentos (`components/missao/instrumentos.tsx`)
-Trilha dos atos (é também navegação; o ato atual tem `aria-current`), altímetro (aparece com `alt`, fica laranja com plasma alto) e etiquetas dos planetas presas por linha SVG à posição projetada. Escrita direta no DOM, sem React.
+Altímetro (aparece com `alt`) e etiquetas dos planetas presas por linha SVG à posição projetada. A lista `ROTULOS` segue a ordem de `PLANETAS` em `mundo.ts`. Escrita direta no DOM, sem React.
 
 ### Conteúdo da missão (`components/missao/missao.tsx`)
-Servidor. Cada cena é `div.cena#<id>[data-cena][data-lado][data-entrada][data-ato]` com `.cartao`. O conteúdo é escolhido pelo `id` da cena (renomear um id em `cenas.ts` esvazia a cena sem erro). A cena 0 sai do servidor visível. Conteúdo longo (entregas de cada frente, caso inteiro, diário completo) vai num `Dossie`.
+Servidor. Cada cena é `div.cena#<id>[data-cena][data-lado][data-entrada][data-ato]` com `.cartao`. O conteúdo é escolhido pelo `id` da cena (renomear um id em `cenas.ts` esvazia a cena sem erro). A cena 0 sai do servidor visível. Conteúdo longo vai num `Dossie`: caso inteiro com as notas medidas, entregas, como funciona, quem faz; as perguntas frequentes ficam em `secoes/contato.tsx`.
 
 ### Âncoras e foco
-O id da cena está num elemento absoluto dentro do palco, então o navegador não sabe rolar até ele. `roteiro.tsx` registra em `lib/motion.ts` um resolvedor (`definirDestino`) que devolve o começo da parada da cena; `smooth-scroll.tsx` usa esse ponto no `lenis.scrollTo`. Endereço aberto com `#processo` é levado à cena no primeiro quadro; Tab que entra num cartão fora de cena rola até ele.
+O id da cena está num elemento absoluto dentro do palco, então o navegador não sabe rolar até ele. `roteiro.tsx` registra em `lib/motion.ts` um resolvedor (`definirDestino`) que devolve o começo da parada da cena; `smooth-scroll.tsx` usa esse ponto no `lenis.scrollTo`. Endereço aberto com `#projetos` é levado à cena no primeiro quadro; Tab que entra num cartão fora de cena rola até ele.
 
 ### Modo linear
-Decidido por script no `<head>` antes da pintura: movimento reduzido, altura ≤ 520 px ou sem WebGL (`html.linear`, e `sem-webgl` esconde o canvas). Também entra se o `Mundo` falhar ao criar. As regras de cinema somem; os cartões viram blocos empilhados sobre fundo escuro; a câmera fica parada na cena 0. O modo não muda depois de carregar.
+Decidido por script no `<head>` antes da pintura: movimento reduzido, altura ≤ 520 px ou sem WebGL (`html.linear`, e `sem-webgl` esconde o canvas). Também entra se o `Mundo` falhar ao criar. As regras de cinema somem; os cartões viram blocos empilhados sobre fundo escuro; a câmera fica parada na Via Láctea. O modo não muda depois de carregar.
 
 ## Desempenho
 - `three` importado sob demanda depois da primeira pintura.
-- Modo leve (toque ou ≤ 4 núcleos): DPR 1, menos oitavas de fbm, menos estrelas e rochas, sem antialias, sem rastro radial.
+- Modo leve (toque ou ≤ 4 núcleos): DPR 1, menos oitavas de fbm, menos pontos na galáxia (22 mil contra 60 mil), menos estrelas e rochas, sem antialias.
 - DPR máximo 1,5; `aliviar()` cai para 1 se os 120 primeiros quadros passarem de 28 ms em média.
-- A cena 3D não é desenhada quando a atmosfera cobre a tela; a camada `tela` só quando algum efeito está ativo; nada roda com a aba oculta.
+- Cada cena só é desenhada quando aparece: a galáxia some depois do zoom, o sistema não é desenhado de longe nem sob a atmosfera, a camada `tela` só com algum efeito ativo, e nada roda com a aba oculta.
 
 ## Segurança e infraestrutura
 `next.config.ts` exporta função da fase do Next. CSP: `script-src 'self' 'unsafe-inline'` (o script de modo e o recado do console são inline), `font-src 'self'`, `img-src 'self' data: https://yasmin-g-studio.vercel.app`, `frame-src https://keepnew.vercel.app`, `connect-src 'self'`, `object-src`/`frame-ancestors 'none'`. HSTS sem `preload`. Redirects 307 das URLs antigas para âncoras.
@@ -142,14 +138,17 @@ Publicação: push em `main` de `SamuelcCouto/detera-premium` → Vercel (detera
 5. **Curva de opacidade assimétrica**: igual para os dois cartões, eles se cruzavam no meio da viagem.
 6. **Lenis já desconta `scroll-padding-top`**: não passe `offset`. Nada de `scroll-behavior: smooth`.
 7. **Dossiê e menu param o Lenis** e o corpo do dossiê tem `data-lenis-prevent`. Nunca ponha `data-lenis-prevent` no conteúdo das cenas.
-8. **Cartões no celular** têm altura máxima e rolam por dentro em tela muito curta; o conteúdo longo vai para o dossiê, não para o cartão.
+8. **A ordem de `PLANETAS` (`mundo.ts`), `ROTULOS` (`instrumentos.tsx`) e `foco` das cenas anda junto.** Projeto novo mexe nos três, mais o conteúdo em `missao.tsx`.
+8b. **Cartões no celular** têm altura máxima e rolam por dentro em tela muito curta; o conteúdo longo vai para o dossiê, não para o cartão.
 9. **QA em headless**: WebGL por software (`--use-angle=swiftshader`); a auditoria da skill `mobile` derruba o Chromium em 1920×1080 nesta página — rode com `--sizes` sem o maior. O preview oculto do app não roda `requestAnimationFrame`.
 10. **Imagem externa e iframe exigem CSP** (`img-src`, `frame-src`).
 
 ## Guia de navegação
-- **Mudar texto** → `src/content/*.ts` (frentes, sintomas, manifesto, processo, casos, perguntas) ou `missao.tsx` (frases da chegada, do diário e do sinal).
+- **Mudar texto** → `src/content/*.ts` (frentes, processo, casos, perguntas) ou `missao.tsx` (frases das cenas e dos dossiês).
 - **Mudar a coreografia** (câmera, atmosfera, tempo de parada, lado do cartão, tipo de entrada) → `src/lib/missao/cenas.ts`.
 - **Nova cena** → linha em `ROTEIRO` + conteúdo no mapa `conteudo` de `missao.tsx` com o mesmo id.
+- **Novo projeto (planeta)** → `PLANETAS` em `mundo.ts`, `ROTULOS` em `instrumentos.tsx`, uma cena em `cenas.ts` e o conteúdo em `missao.tsx`.
+- **A galáxia** → `montarGalaxia` e o trecho "A Via Láctea" de `quadro`, em `mundo.ts`.
 - **Visual dos planetas, céu, plasma, nuvens, relevo** → `src/lib/missao/shaders.ts` (cores dos planetas em `PLANETAS`, `mundo.ts`).
 - **Instrumentos** → `instrumentos.tsx` + bloco "Instrumentos" do CSS.
 - **Cores e fontes** → `@theme` em `globals.css` (medir contraste antes).

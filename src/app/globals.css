@@ -3,21 +3,19 @@
 /* ==================================================================
    DETERA v3 — "Reentrada"
 
-   A página é uma missão: a câmera chega ao sistema DETERA (o núcleo
-   vermelho e as quatro frentes em órbita), atravessa os planetas, entra
-   na atmosfera do planeta azul, pousa onde estão os projetos e volta à
-   órbita. O plano completo está em `docs/design-plan.md`.
+   A página é uma missão curta: da Via Láctea ao sistema solar, onde cada
+   planeta é um projeto, e a reentrada no planeta azul até o contato. O
+   plano está em `docs/design-plan.md`.
 
    Cor com papel. O vácuo é azul-noite, não preto tingido. Vermelho é
    ação e o núcleo; laranja (plasma) só existe na reentrada; o azul claro
    (atmosfera) é instrumento e link.
 
    Duas vozes: Oxanium (a marca) nos títulos, instrumentos e botões;
-   Spectral, a voz do narrador, no texto corrido e no manifesto.
+   Spectral, a voz do narrador, no texto corrido.
 
-   O que a marca não faz: blur, vidro, neon, degradê de enfeite, cortina
-   do centro, fade-and-rise em todo bloco, rótulo em caixa alta, seta no
-   fim do botão.
+   Pouco texto e pouca animação de propósito: cartão diz o mínimo, e o
+   resto mora em dossiês.
    ================================================================== */
 @theme {
   --color-vacuo: #050913;
@@ -246,7 +244,7 @@
   color: var(--color-atmosfera);
 }
 .botao--compacto {
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   padding: 0 1rem;
   font-size: 0.86rem;
 }
@@ -311,6 +309,7 @@
 .cabecalho__marca {
   display: inline-flex;
   align-items: center;
+  min-height: 2.75rem;
   gap: 0.7rem;
   text-decoration: none;
   font-weight: 700;
@@ -427,7 +426,6 @@
      --d  posição relativa à cena, de -1 (vindo) a 1 (indo)
      --q  a mesma posição com gravidade (posição ∝ tempo²)
      --o  opacidade
-     --k  ordem da peça dentro do cartão (as de trás atrasam)
    ------------------------------------------------------------------ */
 .missao {
   position: relative;
@@ -493,32 +491,16 @@ html.js:not(.linear) .cena[data-lado="dir"] .cartao {
 }
 
 /* Lateral: o cartão chega de um lado e sai pelo outro, no sentido da
-   viagem da câmera; as peças de trás atrasam e se separam. */
+   viagem da câmera. */
 html.js:not(.linear) [data-entrada="lateral"] .cartao {
   transform: translate3d(calc(var(--d) * -36vw), 0, 0);
-}
-html.js:not(.linear) [data-entrada="lateral"] .cartao > * {
-  transform: translate3d(calc(var(--d) * var(--k, 0) * -6vw), 0, 0);
 }
 /* Queda: chega do alto acelerando e sai caindo. */
 html.js:not(.linear) [data-entrada="queda"] .cartao {
   transform: translate3d(0, calc(var(--q) * 72svh), 0);
 }
-html.js:not(.linear) [data-entrada="queda"] .cartao > * {
-  transform: translate3d(0, calc(var(--q) * var(--k, 0) * 10svh), 0);
-}
-/* Órbita: o cartão gira em volta de um pivô fora da tela, à esquerda, como
-   um corpo entrando em órbita. */
-html.js:not(.linear) [data-entrada="orbita"] .cartao {
-  transform-origin: -70vw 50%;
-  transform: rotate(calc(var(--d) * -22deg));
-}
-html.js:not(.linear) [data-entrada="orbita"] .cartao > * {
-  transform: translate3d(calc(var(--d) * var(--k, 0) * -4vw), 0, 0);
-}
-
 /* No pouso o céu é claro no horizonte: ali o texto ganha painel. */
-html.js:not(.linear) .cena[data-ato="Solo"] .cartao {
+html.js:not(.linear) .cena[data-painel] .cartao {
   padding: clamp(1.25rem, 2.5vw, 2rem);
   background: rgb(12 20 36 / 0.92);
   border: 1px solid var(--color-borda-viva);
@@ -611,79 +593,6 @@ html.js:not(.linear) .cena[data-ato="Solo"] .cartao {
   color: var(--color-luz);
 }
 
-.sinais {
-  margin-top: 1.6rem;
-  display: grid;
-  gap: 1.1rem;
-}
-.sinais li {
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-borda-viva);
-}
-.sinais h3 {
-  font-weight: 600;
-  font-size: 1.12rem;
-  line-height: 1.3;
-}
-.sinais p {
-  margin-top: 0.3rem;
-  font-size: 0.98rem;
-  color: var(--color-poeira);
-}
-
-.entregas {
-  margin-top: 1.3rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.1rem;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  color: var(--color-atmosfera);
-}
-.entregas li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.entregas li::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-/* O manifesto na reentrada: legenda de filme no meio da tela. */
-.par__generico {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
-  color: #c9d3ea;
-  text-decoration: line-through;
-  text-decoration-color: var(--color-plasma);
-  text-decoration-thickness: 2px;
-}
-.par__especifico {
-  margin-top: 1rem;
-  font-family: var(--font-sans);
-  font-weight: 300;
-  font-size: clamp(1.5rem, 1rem + 1.9vw, 2.6rem);
-  line-height: 1.22;
-  color: var(--color-luz);
-  text-shadow: 0 2px 24px rgb(5 9 19 / 0.65);
-}
-.par__especifico--fecho {
-  font-style: italic;
-  font-size: clamp(1.7rem, 1rem + 2.6vw, 3.2rem);
-}
-.par__simbolo {
-  display: block;
-  width: 1.5rem;
-  height: auto;
-  margin: 0 auto 0.9rem;
-  color: var(--color-luz);
-}
-
 .projeto__foto {
   display: block;
   width: 100%;
@@ -691,13 +600,14 @@ html.js:not(.linear) .cena[data-ato="Solo"] .cartao {
   object-fit: cover;
   border: 1px solid var(--color-borda-viva);
 }
-.projeto__corpo {
+.projeto__foto + .projeto__nome {
   margin-top: 1.1rem;
 }
-.projeto h3 {
+.projeto__nome {
   font-weight: 700;
-  font-size: clamp(1.35rem, 1rem + 1vw, 1.8rem);
-  line-height: 1.15;
+  font-size: clamp(1.6rem, 1.1rem + 1.7vw, 2.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
 }
 .projeto__setor {
   margin-top: 0.2rem;
@@ -705,96 +615,36 @@ html.js:not(.linear) .cena[data-ato="Solo"] .cartao {
   font-size: 0.86rem;
   color: var(--color-atmosfera);
 }
-.notas {
-  margin-top: 1rem;
-}
-.notas dl {
+/* As frentes, em duas colunas. */
+.frentes {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-.notas dt {
-  font-family: var(--font-display);
-  font-size: 0.74rem;
-  line-height: 1.25;
-  color: var(--color-poeira);
-}
-.notas dd {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.7rem;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-.notas p {
-  margin-top: 0.4rem;
-  font-size: 0.84rem;
-  color: var(--color-poeira);
-}
-.notas a,
-.obras a {
-  color: var(--color-atmosfera);
-  text-underline-offset: 4px;
-}
-
-.obras {
-  margin-top: 1.2rem;
-  display: grid;
-  gap: 1.2rem;
-}
-.obras li {
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-borda-viva);
-}
-.obras h3 {
-  font-weight: 700;
-  font-size: 1.15rem;
-}
-.obras p:not(.projeto__setor) {
-  margin-top: 0.35rem;
-  font-size: 0.96rem;
-  color: var(--color-poeira);
-}
-.obras a {
-  display: inline-block;
-  margin-top: 0.4rem;
-  font-family: var(--font-display);
-  font-size: 0.86rem;
-}
-
-.etapa__numero {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(4rem, 2rem + 6vw, 8rem);
-  line-height: 0.9;
-  color: var(--color-determinacao);
-  font-variant-numeric: tabular-nums;
-}
-.etapa__titulo {
-  margin-top: 0.6rem;
-  font-weight: 700;
-  font-size: clamp(1.7rem, 1.2rem + 1.8vw, 2.7rem);
-  line-height: 1.05;
-}
-.etapa__laco {
-  margin-top: 1.2rem;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  color: var(--color-atmosfera);
-}
-
-.assinatura {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 1.5rem;
   margin-top: 1.4rem;
-  font-family: var(--font-display);
-  font-size: 0.92rem;
 }
-.assinatura__simbolo {
-  width: 1.1rem;
-  height: auto;
+.frentes h3 {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.frentes h3[data-acento="sistema"] {
+  color: var(--color-atmosfera);
+}
+.frentes p {
+  margin-top: 0.2rem;
+  font-size: 0.96rem;
+  line-height: 1.4;
+  color: var(--color-poeira);
+}
+
+/* A frase da reentrada: legenda de filme no meio da tela. */
+.frase-reentrada {
+  font-family: var(--font-sans);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.6rem, 1rem + 2.4vw, 3.1rem);
+  line-height: 1.2;
   color: var(--color-luz);
+  text-shadow: 0 2px 24px rgb(5 9 19 / 0.65);
 }
 
 /* ------------------------------------------------------------------
@@ -862,117 +712,19 @@ html.js:not(.linear) .cabecalho {
 /* ------------------------------------------------------------------
    Instrumentos
    ------------------------------------------------------------------ */
-.trajetoria,
 .altimetro,
 .etiquetas {
   display: none;
 }
-html[data-depois] .trajetoria {
-  opacity: 0;
-  visibility: hidden;
-}
-.trajetoria {
-  transition:
-    opacity 0.4s ease,
-    visibility 0.4s;
-}
-html.js:not(.linear) .trajetoria {
-  --trilha: 44svh;
-  position: fixed;
-  left: clamp(1rem, 2vw, 1.75rem);
-  top: calc(50% - var(--trilha) / 2);
-  z-index: 30;
-  display: block;
-  width: 1.5rem;
-  height: var(--trilha);
-  font-family: var(--font-display);
-}
-.trajetoria::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--color-traco);
-}
-.trajetoria li {
-  position: absolute;
-  left: 0;
-  top: calc(var(--p) * 100%);
-  transform: translateY(-50%);
-}
-.trajetoria a {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 1.75rem;
-  padding-left: 0;
-  font-size: 0.74rem;
-  color: var(--color-poeira);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-.trajetoria a::before {
-  content: "";
-  width: 7px;
-  height: 1px;
-  background: var(--color-poeira);
-}
-/* Os nomes dos atos ficam escondidos e aparecem com a trilha sob o cursor
-   ou no foco; à vista, eles encostavam nos cartões do lado esquerdo. O ato
-   atual fica sempre aceso. */
-.trajetoria a span {
-  opacity: 0;
-  transform: translateX(-0.4rem);
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-.trajetoria:hover a span,
-.trajetoria:focus-within a span,
-.trajetoria a[aria-current] span {
-  opacity: 1;
-  transform: none;
-}
-.trajetoria a[aria-current] {
-  color: var(--color-luz);
-}
-.trajetoria a:hover,
-.trajetoria a:focus-visible {
-  color: var(--color-luz);
-}
-.trajetoria__marcador {
-  position: absolute;
-  left: -4px;
-  top: -4px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--color-determinacao);
-  box-shadow: 0 0 0 3px rgb(255 59 59 / 0.22);
-}
-@media (max-width: 1100px) {
-  html.js:not(.linear) .trajetoria {
-    display: none;
-  }
-}
-/* Com a trilha à vista, o cartão da esquerda abre espaço para o nome do ato. */
-@media (min-width: 1101px) {
-  html.js:not(.linear) .cena[data-lado="esq"] {
-    padding-left: max(7vw, 10rem);
-  }
-}
-
 html.js:not(.linear) .altimetro {
   position: fixed;
   right: clamp(1rem, 2.5vw, 2.25rem);
   top: 50%;
   z-index: 30;
   display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  column-gap: 0.9rem;
+  justify-items: end;
+  padding: 0.5rem 0.75rem;
+  background: rgb(12 20 36 / 0.88);
   transform: translateY(-50%);
   font-family: var(--font-display);
   color: var(--color-atmosfera);
@@ -980,12 +732,10 @@ html.js:not(.linear) .altimetro {
   opacity: 0;
 }
 .altimetro__rotulo {
-  grid-column: 1;
   font-size: 0.74rem;
   color: var(--color-poeira);
 }
 .altimetro__leitura {
-  grid-column: 1;
   font-size: 1.6rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -995,32 +745,10 @@ html.js:not(.linear) .altimetro {
 .altimetro[data-alerta] .altimetro__leitura {
   color: var(--color-plasma);
 }
-.altimetro__janela {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  width: 1.4rem;
-  height: 9rem;
-  overflow: hidden;
-  border-left: 1px solid var(--color-traco);
-  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
-}
-.altimetro__fita {
-  height: 200%;
-  margin-top: -50%;
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--color-atmosfera) 0 1px,
-    transparent 1px 16px
-  );
-  width: 0.7rem;
-}
 @media (max-width: 760px) {
   html.js:not(.linear) .altimetro {
     top: 5.6rem;
     transform: none;
-  }
-  .altimetro__janela {
-    height: 4rem;
   }
   .altimetro__leitura {
     font-size: 1.2rem;
@@ -1032,6 +760,7 @@ html.js:not(.linear) .etiquetas {
   inset: 0;
   z-index: 20;
   display: block;
+  overflow: hidden;
   pointer-events: none;
 }
 .etiquetas__linhas {
@@ -1057,12 +786,9 @@ html.js:not(.linear) .etiquetas {
   pointer-events: auto;
   border-bottom: 1px solid var(--color-atmosfera);
 }
-.etiqueta[data-acento="sistema"] {
-  color: var(--color-atmosfera);
-}
 @media (max-width: 760px) {
-  html.js:not(.linear) .etiquetas {
-    display: none;
+  .etiqueta {
+    font-size: 0.72rem;
   }
 }
 
@@ -1173,6 +899,44 @@ html.js:not(.linear) .etiquetas {
   font-family: var(--font-display);
   font-size: 0.86rem;
 }
+.dossie__stack a {
+  color: var(--color-atmosfera);
+  text-underline-offset: 4px;
+}
+.dossie__frente {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--color-borda-viva);
+}
+.dossie__frente:last-child {
+  border-bottom: 0;
+}
+.dossie__etapa {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-luz);
+}
+.notas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+.notas dt {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  line-height: 1.25;
+  color: var(--color-poeira);
+}
+.notas dd {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ------------------------------------------------------------------
    Depois da missão: perguntas e contato.
@@ -1199,43 +963,6 @@ html.js:not(.linear) .etiquetas {
     gap: 5rem;
   }
 }
-.perguntas details {
-  border-top: 1px solid var(--color-borda-viva);
-}
-.perguntas details:last-child {
-  border-bottom: 1px solid var(--color-borda-viva);
-}
-.perguntas summary {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.15rem 0;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.08rem;
-  cursor: pointer;
-  list-style: none;
-}
-.perguntas summary::-webkit-details-marker {
-  display: none;
-}
-.perguntas summary::after {
-  content: "+";
-  font-weight: 400;
-  color: var(--color-atmosfera);
-}
-.perguntas details[open] summary::after {
-  content: "−";
-}
-.perguntas details p {
-  padding-bottom: 1.3rem;
-  max-width: 62ch;
-  color: var(--color-poeira);
-}
-.perguntas details[open] p {
-  animation: varre 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
 .canais {
   margin-top: 2rem;
 }
@@ -1422,35 +1149,15 @@ html.js:not(.linear) .etiquetas {
   html.js:not(.linear) [data-entrada="lateral"] .cartao {
     transform: translate3d(calc(var(--d) * -70vw), 0, 0);
   }
-  html.js:not(.linear) [data-entrada="orbita"] .cartao {
-    transform-origin: 50% 240%;
-  }
-  .texto--opcional,
-  html.js:not(.linear) .sinais p,
-  html.js:not(.linear) .projeto .texto {
-    display: none;
-  }
-  html.js:not(.linear) .sinais {
-    gap: 0.6rem;
+  html.js:not(.linear) .frentes {
+    gap: 0.7rem 1rem;
     margin-top: 1rem;
   }
-  html.js:not(.linear) .sinais li {
-    padding-top: 0.6rem;
-  }
-  .par__simbolo {
-    margin-left: 0;
+  html.js:not(.linear) .frentes p {
+    font-size: 0.86rem;
   }
   .projeto__foto {
     aspect-ratio: 16 / 7;
-  }
-  .notas dd {
-    font-size: 1.35rem;
-  }
-  .notas dt {
-    font-size: 0.66rem;
-  }
-  .etapa__numero {
-    font-size: 3.4rem;
   }
   .dica {
     display: none;
@@ -1460,15 +1167,8 @@ html.js:not(.linear) .etiquetas {
   .projeto__foto {
     aspect-ratio: 16 / 5;
   }
-  html.js:not(.linear) .notas p {
-    font-size: 0.78rem;
-  }
 }
 @media (max-height: 760px) and (min-width: 761px) {
-  html.js:not(.linear) .sinais p,
-  html.js:not(.linear) .texto--opcional {
-    display: none;
-  }
   .projeto__foto {
     aspect-ratio: 16 / 6;
   }
@@ -1491,7 +1191,6 @@ html.js:not(.linear) .etiquetas {
 @media print {
   .palco-3d,
   .cabecalho,
-  .trajetoria,
   .altimetro,
   .etiquetas,
   .acoes {

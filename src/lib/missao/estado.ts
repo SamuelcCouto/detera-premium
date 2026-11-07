@@ -12,30 +12,23 @@ export const E = {
   a: 0,
   b: 0,
   t: 0,
-  /** Velocidade da rolagem, em cenas por segundo (com sinal). */
-  vel: 0,
 
+  galaxia: 1,
   atmos: 0,
   ceu: 0,
   plasma: 0,
   tremor: 0,
   nuvens: 0,
   relevo: 0,
-  relevoX: 0,
   alt: 0,
   altVisivel: 0,
-  trajetoria: 0,
-  orbita: 0,
   rotulos: 0,
   rastro: 0,
-  sentido: 1,
 
-  /** Chegada ao carregar: 0 no primeiro quadro, 1 quando a câmera assenta. */
-  chegada: 0,
   /** Cursor, de -1 a 1 em cada eixo, já com a mola aplicada. */
   mx: 0,
   my: 0,
-  /** Modo linear: sem cena dirigida, a câmera fica parada na pose do sistema. */
+  /** Modo linear: sem cena dirigida, a câmera fica parada na Via Láctea. */
   linear: false,
 
   /** Posições projetadas dos planetas na tela (px), escritas pela cena 3D para as etiquetas. */
@@ -46,15 +39,12 @@ const suave = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 const NUMERICOS = [
+  "galaxia",
   "atmos",
   "ceu",
   "plasma",
   "tremor",
-  "nuvens",
   "relevo",
-  "relevoX",
-  "trajetoria",
-  "orbita",
   "rotulos",
 ] as const satisfies readonly (keyof Cena & keyof typeof E)[];
 
@@ -80,8 +70,9 @@ export function interpolar(s: number, cenas: Cena[] = CENAS) {
   E.alt = altA !== null && altB !== null ? lerp(altA, altB, t) : E.alt;
   E.altVisivel = lerp(A.alt === null ? 0 : 1, B.alt === null ? 0 : 1, t);
 
-  // Rastros só durante a viagem até a cena que os pede, no meio dela mais forte.
+  // Rastros e nuvens só durante a viagem até a cena que os pede, no meio dela
+  // mais fortes. Enquanto há plasma, os rastros acompanham.
   const viagem = Math.sin(Math.PI * (sc - a));
   E.rastro = Math.max(B.rastro * viagem, E.plasma * 0.9);
-  E.sentido = B.rastro > 0 ? B.sentido : 1;
+  E.nuvens = B.nuvens * viagem;
 }

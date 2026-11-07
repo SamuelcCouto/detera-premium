@@ -88,7 +88,6 @@ export function Roteiro() {
 
     const ativos = new Set<HTMLElement>();
     let anterior = -1;
-    let ultimoTempo = 0;
 
     const tique = (tempo: number) => {
       if (html.classList.contains("linear")) {
@@ -102,10 +101,6 @@ export function Roteiro() {
       }
 
       const s = posicaoNaRolagem(window.scrollY);
-      const dt = Math.max(tempo - ultimoTempo, 1 / 120);
-      ultimoTempo = tempo;
-      const vel = anterior < 0 ? 0 : (s - anterior) / dt;
-      E.vel += (vel - E.vel) * 0.15;
 
       if (s !== anterior) {
         anterior = s;
@@ -143,10 +138,6 @@ export function Roteiro() {
           ativos.add(cartao);
         }
       }
-
-      // Passada a missão, os instrumentos saem: perguntas e contato são página.
-      const depois = window.scrollY > topo + missao.offsetHeight - window.innerHeight * 1.2;
-      if (depois !== html.hasAttribute("data-depois")) html.toggleAttribute("data-depois", depois);
 
       // O cabeçalho escurece por trás quando o plasma toma as bordas da tela.
       html.style.setProperty("--plasma", E.plasma.toFixed(3));
